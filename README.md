@@ -159,7 +159,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `driver3@test.com` | Driver | — |
 | `driver4@test.com` | Driver | — |
 | `coordinator@test.com` | Coordinator | Mansarovar Ward 12 |
-| `resident@test.com` | Resident | Vaishali Nagar Ward 8 |
+| `resident1@test.com` | Resident | Vaishali Nagar Ward 8 |
 | `resident2@test.com` | Resident | Mansarovar Ward 12 |
 | `resident3@test.com` | Resident | Civil Lines Ward 3 |
 
