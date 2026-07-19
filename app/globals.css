@@ -1,27 +1,101 @@
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #021B3A;
+    --foreground: #E2E8F0;
+    --card: #0A2744;
+    --card-foreground: #E2E8F0;
+    --popover: #0A2744;
+    --popover-foreground: #E2E8F0;
+    --primary: #0D9488;
+    --primary-foreground: #FFFFFF;
+    --secondary: #0F2847;
+    --secondary-foreground: #94A3B8;
+    --muted: #0F2847;
+    --muted-foreground: #94A3B8;
+    --accent: #0A2744;
+    --accent-foreground: #E2E8F0;
+    --destructive: #EF4444;
+    --border: #1E3A5F;
+    --input: #1E3A5F;
+    --ring: #0D9488;
+    --radius: 0.625rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  html {
+    @apply font-sans;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+* {
+  -webkit-tap-highlight-color: transparent;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+input, select, textarea {
+  font-size: 16px;
 }
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* ============================================
+   LIGHT / DAY THEME
+   bg: off-white, cards: light blue, text: navy
+   ============================================ */
+
+.light { --background: #F5F5F0; --foreground: #021B3A; }
+
+/* Page background */
+.light .bg-\[\#021B3A\] { background-color: #F5F5F0 !important; }
+.light .bg-\[\#021B3A\]\/95 { background-color: rgba(245, 245, 240, 0.95) !important; }
+
+/* Card backgrounds — light blue */
+.light .bg-\[\#0A2744\] { background-color: #E4EEF7 !important; }
+.light .bg-\[\#0D2D4F\] { background-color: #D4E2F0 !important; }
+
+/* Borders — lighter shade of card */
+.light .border-\[\#1E3A5F\] { border-color: #B4CCE2 !important; }
+
+/* Text — navy blue */
+.light .text-white { color: #021B3A !important; }
+.light button.text-white,
+.light a[class*="bg-teal"] .text-white { color: #FFFFFF !important; }
+.light [class*="bg-teal-600"].text-white { color: #FFFFFF !important; }
+.light [class*="bg-amber-950"] .text-white { color: #FFFFFF !important; }
+.light [class*="bg-emerald-950"] .text-white { color: #FFFFFF !important; }
+.light [class*="bg-red-950"] .text-white { color: #FFFFFF !important; }
+.light [class*="bg-blue-950"] .text-white { color: #FFFFFF !important; }
+
+.light .text-slate-200 { color: #1A3A5C !important; }
+.light .text-slate-300 { color: #2D4F70 !important; }
+.light .text-slate-400 { color: #4A6A8C !important; }
+.light .text-slate-500 { color: #6A8AA8 !important; }
+
+/* Icons with colored backgrounds keep their styling */
+.light [class*="bg-teal-600\/20"],
+.light [class*="bg-teal-950"],
+.light [class*="bg-amber-950"],
+.light [class*="bg-emerald-950"],
+.light [class*="bg-red-950"],
+.light [class*="bg-blue-950"] {
+  background-color: inherit !important;
+}
+.light .border-teal-600\/30,
+.light .border-teal-900,
+.light .border-amber-900,
+.light .border-emerald-900,
+.light .border-red-900 { border-color: inherit !important; }
