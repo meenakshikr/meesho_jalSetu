@@ -32,7 +32,7 @@ India faces an acute water crisis, especially during summer heatwaves. Most hous
 
 ### High-Level Design
 
-![JalSetu HLD](test-pictures/newhdl.png)
+![JalSetu HLD](test-pictures/final_hdl.png)
 
 ### Database Schema (Supabase / PostgreSQL)
 
