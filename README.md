@@ -188,7 +188,7 @@ Ranks available tankers for a specific ward based on multiple factors, so reside
 **Role:** Coordinator, Owner (monitoring)
 **Model:** Groq llama-3.3-70b-versatile
 
-Detects when a tanker is charging significantly more than the district average — protects residents from price gouging during peak demand.
+Detects when a tanker is charging significantly more than the district average and protects residents from price gouging during peak demand.
 
 **Flow:**
 1. Triggered when a booking is created or reviewed
@@ -214,7 +214,7 @@ Predicts water demand for each ward over the next 7 days so tanker owners can po
 **Flow:**
 1. Owner opens the demand forecast dashboard
 2. System fetches all wards, last 30 days of bookings, and active heatwave alerts
-3. Aggregates per-ward stats: pending bookings, total delivered, average price, heatwave status
+3. Aggregates per ward stats: pending bookings, total delivered, average price, heatwave status
 4. Sends aggregated data to Groq
 5. AI analyzes patterns (e.g., heatwave = higher demand, low recent deliveries = unmet need)
 6. Returns demand scores (0-100) and predictions for each ward with reasoning
@@ -262,42 +262,6 @@ Generates personalized messages to re-engage residents who haven't booked water 
 **Input:** `{ ward_id }`
 **Output:** `{ nudges: [{ user_id, message, urgency: "low"|"medium"|"high" }] }`
 
----
-
-### Agent 7: Heatwave Monitoring Cron (System Automation)
-
-**Endpoint:** `GET /api/cron/heatwave-check` (runs daily at 8:00 AM)
-**Role:** System (background automation)
-
-Monitors weather data across all districts and automatically creates heatwave alerts when conditions are dangerous.
-
-**Flow:**
-1. Runs daily via Vercel Cron
-2. Fetches live weather from OpenWeatherMap for each district
-3. If temperature >= 40 degrees C: calls the Heatwave Advisory agent (Agent 5) to generate safety advice
-4. Deactivates old heatwave alerts and creates new ones with severity, advisory text, and 6-hour expiry
-5. This data feeds into the demand forecast, predictive nudge, and coordinator nudge systems
-
-**Input:** None (automated)
-**Output:** `{ districts_checked, alerts_created }`
-
----
-
-### Agent 8: Rule-based Water Nudge (System Automation)
-
-**Endpoint:** `GET /api/cron/coordinator-nudge` (runs daily at 7:00 AM)
-**Role:** Resident water supply reminders
-
-Deterministic fallback that sends water-usage reminders based on calculated days remaining — no AI involved, purely rule-based.
-
-**Flow:**
-1. Runs daily via Vercel Cron
-2. For every resident, estimates days of water remaining from their last delivery using `estimateDaysRemaining()`
-3. If estimate is below threshold (4 days during heatwave, 2 days otherwise) and no nudge sent today: inserts a pre-written message into `nudge_log`
-4. Complements the AI-powered predictive nudge (Agent 6) as a reliable backup
-
-**Input:** None (automated)
-**Output:** `{ residents_checked, nudges_sent }`
 
 ---
 
