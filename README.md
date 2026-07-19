@@ -550,22 +550,6 @@ jalsetu/
 4. Deploy — Vercel auto-deploys on every push to main
 5. Disable Vercel Authentication in Deployment Protection settings so anyone with the link can access
 
-### Cron Jobs
-
-Two scheduled tasks run daily via Vercel Cron:
-- **Heatwave Check** (`0 8 * * *`): Monitors temperature data and creates/updates heatwave alerts
-- **Coordinator Nudge** (`0 7 * * *`): Sends predictive water-usage nudges to inactive residents
-
----
-
-## Design System
-
-- Dark navy (#021B3A) background
-- Teal (#0D9488) primary accent
-- Rounded-2xl card pattern
-- Mobile-first responsive layout (430px max-width)
-- No emojis, no Hindi in UI text
-- Clean, professional interface suitable for government/enterprise demos
 
 ---
 
