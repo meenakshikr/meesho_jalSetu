@@ -6,6 +6,7 @@ import { Booking, Payment } from '@/types'
 import { LoadingSkeleton, ErrorState } from '@/components/ui/LoadingSkeleton'
 import { formatINR } from '@/lib/utils'
 import { createSupabaseClient } from '@/lib/supabase-client'
+import { compressImage } from '@/lib/compress-image'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Package, Truck, CheckCircle, MapPin, Droplets, Camera, AlertTriangle, Loader2 } from 'lucide-react'
 
@@ -88,11 +89,15 @@ export default function ConfirmCollectPage({ params }: Props) {
       const formData = new FormData()
 
       const beforeBlob = await fetch(beforePhoto).then(r => r.blob())
-      formData.append('before_image', beforeBlob, 'before.jpg')
+      const beforeFile = new File([beforeBlob], 'before.jpg', { type: 'image/jpeg' })
+      const compressedBefore = await compressImage(beforeFile)
+      formData.append('before_image', compressedBefore, 'before.jpg')
 
       if (afterPhoto) {
         const afterBlob = await fetch(afterPhoto).then(r => r.blob())
-        formData.append('after_image', afterBlob, 'after.jpg')
+        const afterFile = new File([afterBlob], 'after.jpg', { type: 'image/jpeg' })
+        const compressedAfter = await compressImage(afterFile)
+        formData.append('after_image', compressedAfter, 'after.jpg')
       }
 
       formData.append('volume_ordered', String(booking.volume_ordered))

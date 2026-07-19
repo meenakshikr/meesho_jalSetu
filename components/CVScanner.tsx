@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { Camera, CheckCircle, RotateCcw } from 'lucide-react'
+import { compressImage } from '@/lib/compress-image'
 
 interface CVScannerProps {
   onCapture: (beforeFile: File, afterFile: File) => void
@@ -41,9 +42,13 @@ export default function CVScanner({ onCapture, result, loading }: CVScannerProps
     e.target.value = ''
   }
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
     if (beforeFile && afterFile) {
-      onCapture(beforeFile, afterFile)
+      const [compressedBefore, compressedAfter] = await Promise.all([
+        compressImage(beforeFile),
+        compressImage(afterFile),
+      ])
+      onCapture(compressedBefore, compressedAfter)
     }
   }
 
