@@ -129,44 +129,175 @@ JalSetu uses two AI backends working together:
 | **Groq** | llama-3.3-70b-versatile | Text tasks: demand forecasting, anomaly detection, tanker ranking, nudge generation, heatwave advisories |
 | **Google Gemini** | gemini-3.1-flash-lite | Vision tasks: analyzing tanker photos to estimate water fill levels |
 
-### AI Endpoints
-
-| Endpoint | What It Does | When It Is Called |
-|----------|-------------|-----------------|
-| `/api/ai/cv-volume` | Analyzes before/after photos of tanker hatch to calculate actual volume delivered | Driver takes delivery photos |
-| `/api/ai/rank-tankers` | Ranks tankers by price, distance, rating, and capacity for a specific ward | Resident searches marketplace |
-| `/api/ai/anomaly-check` | Detects price gouging by comparing prices against ward/district averages | Coordinator monitors bookings |
-| `/api/ai/demand-forecast` | Predicts 7-day water demand for each ward based on historical data and heatwave conditions | Owner views demand dashboard |
-| `/api/ai/heatwave-advisory` | Generates severity-rated heatwave safety advisories with do/don't lists | Heatwave alert is active |
-| `/api/ai/predictive-nudge` | Generates personalized re-engagement messages for inactive residents | Cron job runs daily |
-
 AI wrapper lives in `lib/gemini.ts` — unified interface with retry and exponential backoff for both Groq and Gemini APIs.
 
 ---
 
-## CV Volume Verification Flow (Core Feature)
+### Agent 1: CV Volume Verification (Gemini Vision)
 
-This is the key innovation of JalSetu — using computer vision to verify water delivery volume:
+**Endpoint:** `POST /api/ai/cv-volume`
+**Role:** Driver, Coordinator
+**Model:** Gemini 3.1-flash-lite (vision)
 
-1. Driver arrives at delivery location
-2. Opens the "Volume Verification" card on the delivery page
-3. Takes BEFORE photo (top-down through tanker hatch)
-4. Pumps water to customer's tank
-5. Takes AFTER photo (same angle)
-6. Both photos are compressed client-side (max 1024px, JPEG 70% quality)
-7. Sent to `/api/ai/cv-volume` as FormData
-8. Server sends both images to Gemini Vision API
-9. AI estimates fill percentage for each photo
-10. Volume delivered = (before% - after%) x tank_capacity
-11. Compared against volume_ordered:
-    - Within 10%: VERDICT = "confirmed" — Driver can complete delivery
-    - Over 10% short: VERDICT = "short" — System auto-raises dispute
-    - Over 10% excess: VERDICT = "excess" — Flagged for review
-12. If disputed:
-    - Booking status set to "disputed" and anomaly_flagged = true
-    - Notifications sent to coordinator and resident via nudge_log
-    - Driver sees "Dispute raised automatically. You cannot override this."
-    - "Complete Delivery" button is disabled
+Uses computer vision to verify how much water was actually delivered by analyzing photos of the tanker hatch.
+
+**Flow:**
+1. Driver takes BEFORE photo (top-down through tanker hatch)
+2. Pumps water to customer's tank
+3. Takes AFTER photo (same angle)
+4. Both photos compressed client-side (max 1024px, JPEG 70%)
+5. Sent to `/api/ai/cv-volume` as FormData
+6. Server sends both images to Gemini Vision API with fill-estimation prompts
+7. AI returns fill percentage for each photo
+8. Volume delivered = (before% - after%) x tank_capacity
+9. Compared against volume_ordered:
+   - Within 10%: **confirmed** — Driver can complete delivery
+   - Over 10% short: **short** — System auto-raises dispute
+   - Over 10% excess: **excess** — Flagged for review
+10. If disputed: coordinator and resident notified via nudge_log, driver cannot override
+
+**Input:** `{ before_image, after_image, volume_ordered, tank_capacity }`
+**Output:** `{ verdict, estimated_liters, discrepancy_percent, confidence, before_fill_percent, after_fill_percent }`
+
+---
+
+### Agent 2: AI Tanker Ranking (Groq)
+
+**Endpoint:** `POST /api/ai/rank-tankers`
+**Role:** Resident (marketplace)
+**Model:** Groq llama-3.3-70b-versatile
+
+Ranks available tankers for a specific ward based on multiple factors, so residents can make informed choices.
+
+**Flow:**
+1. Resident searches the marketplace for their ward
+2. System fetches all available tankers and recent district booking prices from Supabase
+3. Calculates haversine distance from each tanker to the resident's location
+4. Sends tanker details + district average price to Groq
+5. AI scores each tanker 0-100 based on: price vs. district average, rating, delivery count, distance, and certification
+6. Returns ranked list with a short reason (max 8 words) for each ranking
+
+**Input:** `{ ward_id, volume_needed, user_lat, user_lng }`
+**Output:** `{ tankers: [{ id, ai_rank_score, ai_rank_reason, ...tanker_details }] }`
+
+---
+
+### Agent 3: Price Gouging Anomaly Detection (Groq)
+
+**Endpoint:** `POST /api/ai/anomaly-check`
+**Role:** Coordinator, Owner (monitoring)
+**Model:** Groq llama-3.3-70b-versatile
+
+Detects when a tanker is charging significantly more than the district average — protects residents from price gouging during peak demand.
+
+**Flow:**
+1. Triggered when a booking is created or reviewed
+2. System calculates how far the booking price is above the ward average
+3. If >20% above average, sends price data to Groq
+4. AI evaluates whether the premium is justified (summer premiums of 20-30% are considered legitimate)
+5. Only flags prices >40% above average as anomalies
+6. If flagged: logs the anomaly, updates booking with `anomaly_flagged: true`, notifies coordinator
+
+**Input:** `{ booking_id, tanker_id, ward_id, price_per_liter }`
+**Output:** `{ is_anomaly, percent_above, reason (max 12 words), severity: "low"|"medium"|"high" }`
+
+---
+
+### Agent 4: Ward Demand Forecasting (Groq)
+
+**Endpoint:** `POST /api/ai/demand-forecast`
+**Role:** Owner (fleet planning)
+**Model:** Groq llama-3.3-70b-versatile
+
+Predicts water demand for each ward over the next 7 days so tanker owners can position their fleet strategically.
+
+**Flow:**
+1. Owner opens the demand forecast dashboard
+2. System fetches all wards, last 30 days of bookings, and active heatwave alerts
+3. Aggregates per-ward stats: pending bookings, total delivered, average price, heatwave status
+4. Sends aggregated data to Groq
+5. AI analyzes patterns (e.g., heatwave = higher demand, low recent deliveries = unmet need)
+6. Returns demand scores (0-100) and predictions for each ward with reasoning
+
+**Input:** None (auto-fetches from database)
+**Output:** `{ forecast: [{ ward_id, ward_name, current_demand_score, predicted_demand_tomorrow, pending_bookings, avg_price_paid, reasoning }] }`
+
+---
+
+### Agent 5: Heatwave Advisory Generator (Groq)
+
+**Endpoint:** `POST /api/ai/heatwave-advisory`
+**Role:** All users (safety information)
+**Model:** Groq llama-3.3-70b-versatile
+
+Generates plain-language heatwave safety advisories tailored to the current weather conditions. Written at a Class 5 reading level so everyone can understand.
+
+**Flow:**
+1. Called by the heatwave-check cron job when temperature >= 40 degrees C
+2. Sends current temperature, humidity, district, and state to Groq
+3. AI generates: severity tier (watch/warning/emergency), 2-sentence advisory, 3 do-items, 2 don't-items, and best outdoor time window
+4. Advisory is stored in the `heatwave_alerts` table
+5. Displayed to all users in the affected ward via the HeatwaveAlert banner
+
+**Input:** `{ temperature, feels_like, humidity, district, state }`
+**Output:** `{ severity: "watch"|"warning"|"emergency", advisory_english, do_list: [3], dont_list: [2], best_time_outdoors }`
+
+---
+
+### Agent 6: Predictive Re-engagement Nudges (Groq)
+
+**Endpoint:** `POST /api/ai/predictive-nudge`
+**Role:** Resident engagement (retention)
+**Model:** Groq llama-3.3-70b-versatile
+
+Generates personalized messages to re-engage residents who haven't booked water recently — helps prevent water emergencies.
+
+**Flow:**
+1. System identifies inactive residents in a ward (no booking in 6+ days, or never ordered)
+2. Checks if there is an active heatwave and its severity
+3. Sends resident details + heatwave context to Groq
+4. AI generates personalized nudge for each resident (e.g., "You last ordered 8 days ago. A heatwave is active in your area. Your tank may be running low.")
+5. Nudges are displayed to residents when they open the app
+
+**Input:** `{ ward_id }`
+**Output:** `{ nudges: [{ user_id, message, urgency: "low"|"medium"|"high" }] }`
+
+---
+
+### Agent 7: Heatwave Monitoring Cron (System Automation)
+
+**Endpoint:** `GET /api/cron/heatwave-check` (runs daily at 8:00 AM)
+**Role:** System (background automation)
+
+Monitors weather data across all districts and automatically creates heatwave alerts when conditions are dangerous.
+
+**Flow:**
+1. Runs daily via Vercel Cron
+2. Fetches live weather from OpenWeatherMap for each district
+3. If temperature >= 40 degrees C: calls the Heatwave Advisory agent (Agent 5) to generate safety advice
+4. Deactivates old heatwave alerts and creates new ones with severity, advisory text, and 6-hour expiry
+5. This data feeds into the demand forecast, predictive nudge, and coordinator nudge systems
+
+**Input:** None (automated)
+**Output:** `{ districts_checked, alerts_created }`
+
+---
+
+### Agent 8: Rule-based Water Nudge (System Automation)
+
+**Endpoint:** `GET /api/cron/coordinator-nudge` (runs daily at 7:00 AM)
+**Role:** Resident water supply reminders
+
+Deterministic fallback that sends water-usage reminders based on calculated days remaining — no AI involved, purely rule-based.
+
+**Flow:**
+1. Runs daily via Vercel Cron
+2. For every resident, estimates days of water remaining from their last delivery using `estimateDaysRemaining()`
+3. If estimate is below threshold (4 days during heatwave, 2 days otherwise) and no nudge sent today: inserts a pre-written message into `nudge_log`
+4. Complements the AI-powered predictive nudge (Agent 6) as a reliable backup
+
+**Input:** None (automated)
+**Output:** `{ residents_checked, nudges_sent }`
 
 ---
 
