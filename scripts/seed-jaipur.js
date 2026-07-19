@@ -6,20 +6,17 @@ const sb = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-// Existing IDs from DB
 const EXISTING_WARD = 'aaaaaaaa-0000-0000-0000-000000000001'
 const EXISTING_OWNER = '3e286e05-92be-4cb8-901c-1ff87b98353e'
 const EXISTING_DRIVER = 'de04c439-c09f-473b-a3a8-379e66963786'
 const EXISTING_RESIDENT = '96b39df4-3e7d-4570-85f0-5da2f88d2104'
 const EXISTING_COORDINATOR = 'ca8f1e59-cb49-43a6-94fb-0c4ae3ca914f'
 
-// New ward IDs
 const VAISHALI_WARD = 'c0000001-0000-0000-0000-000000000001'
 const MALVIYA_WARD = 'c0000002-0000-0000-0000-000000000002'
 const JAGATPURA_WARD = 'c0000003-0000-0000-0000-000000000003'
 const CIVIL_LINES_WARD = 'c0000004-0000-0000-0000-000000000004'
 
-// New user IDs
 const RESIDENTS = {
   rahul: 'a1000001-0000-0000-0000-000000000001',
   sakshi: 'a1000002-0000-0000-0000-000000000002',
@@ -47,7 +44,6 @@ const OWNERS = {
   veer: 'a4000004-0000-0000-0000-000000000004',
 }
 
-// Tanker IDs
 const TANKERS = {
   balaji1: 'd1000001-0000-0000-0000-000000000001',
   balaji2: 'd1000002-0000-0000-0000-000000000002',
@@ -59,7 +55,6 @@ const TANKERS = {
   sunder: 'd1000008-0000-0000-0000-000000000008',
 }
 
-// Booking IDs
 const BOOKINGS = {
   b1: 'e1000001-0000-0000-0000-000000000001',
   b2: 'e1000002-0000-0000-0000-000000000002',
@@ -82,7 +77,6 @@ const daysFromNow = (d) => new Date(now.getTime() + d * 86400000).toISOString()
 async function seed() {
   let errors = 0
 
-  // 1. NEW WARDS
   console.log('Inserting wards...')
   const { error: wErr } = await sb.from('wards').upsert([
     { id: VAISHALI_WARD, name: 'Vaishali Nagar', city: 'Jaipur', district: 'Jaipur', state: 'Rajasthan', lat: 26.8938, lng: 75.7753, created_at: daysAgo(90) },
@@ -92,7 +86,6 @@ async function seed() {
   ], { onConflict: 'id' })
   if (wErr) { console.error('Wards error:', wErr); errors++ }
 
-  // 2. NEW OWNERS
   console.log('Inserting owners...')
   const { error: oErr } = await sb.from('users').upsert([
     { id: OWNERS.balaji, auth_id: null, name: 'Balaji Water Suppliers', phone: '9876540001', role: 'owner', ward_id: VAISHALI_WARD, language: 'hi', subsidy_points: 0, created_at: daysAgo(85) },
@@ -102,7 +95,6 @@ async function seed() {
   ], { onConflict: 'id' })
   if (oErr) { console.error('Owners error:', oErr); errors++ }
 
-  // 3. NEW DRIVERS
   console.log('Inserting drivers...')
   const { error: dErr } = await sb.from('users').upsert([
     { id: DRIVERS.ram, auth_id: null, name: 'Ramveer Singh', phone: '9876540010', role: 'driver', ward_id: null, language: 'hi', subsidy_points: 0, created_at: daysAgo(80) },
@@ -112,7 +104,6 @@ async function seed() {
   ], { onConflict: 'id' })
   if (dErr) { console.error('Drivers error:', dErr); errors++ }
 
-  // 4. NEW RESIDENTS
   console.log('Inserting residents...')
   const { error: rErr } = await sb.from('users').upsert([
     { id: RESIDENTS.rahul, auth_id: null, name: 'Rahul Meena', phone: '9876540020', role: 'resident', ward_id: VAISHALI_WARD, language: 'hi', subsidy_points: 120, created_at: daysAgo(60) },
@@ -123,7 +114,6 @@ async function seed() {
   ], { onConflict: 'id' })
   if (rErr) { console.error('Residents error:', rErr); errors++ }
 
-  // 5. NEW COORDINATORS
   console.log('Inserting coordinators...')
   const { error: cErr } = await sb.from('users').upsert([
     { id: COORDS.anjali, auth_id: null, name: 'Anjali Kumari', phone: '9876540030', role: 'coordinator', ward_id: VAISHALI_WARD, language: 'hi', subsidy_points: 0, created_at: daysAgo(50) },
@@ -131,52 +121,36 @@ async function seed() {
   ], { onConflict: 'id' })
   if (cErr) { console.error('Coords error:', cErr); errors++ }
 
-  // 6. TANKERS (real operator names from search)
   console.log('Inserting tankers...')
   const { error: tErr } = await sb.from('tankers').upsert([
-    // Balaji Water Suppliers — real Jaipur company, Vaishali Nagar
     { id: TANKERS.balaji1, owner_id: OWNERS.balaji, driver_id: DRIVERS.ram, operator_name: 'Balaji Water Suppliers', vehicle_number: 'RJ14-WT-1001', capacity_liters: 5000, price_per_liter: 0.35, is_certified: true, is_available: true, current_lat: 26.8950, current_lng: 75.7760, rating: 4.4, total_deliveries: 187, created_at: daysAgo(85) },
     { id: TANKERS.balaji2, owner_id: OWNERS.balaji, driver_id: DRIVERS.sham, operator_name: 'Balaji Water Suppliers', vehicle_number: 'RJ14-WT-1002', capacity_liters: 3000, price_per_liter: 0.40, is_certified: true, is_available: true, current_lat: 26.8920, current_lng: 75.7740, rating: 4.2, total_deliveries: 95, created_at: daysAgo(80) },
-    // Shri Shyam Tanker — real Jaipur company, Mansarovar
     { id: TANKERS.shyam1, owner_id: OWNERS.shyam, driver_id: DRIVERS.ganesh, operator_name: 'Shri Shyam Tanker Service', vehicle_number: 'RJ14-WT-2001', capacity_liters: 8000, price_per_liter: 0.30, is_certified: true, is_available: true, current_lat: 26.8470, current_lng: 75.8030, rating: 4.1, total_deliveries: 156, created_at: daysAgo(80) },
     { id: TANKERS.shyam2, owner_id: OWNERS.shyam, driver_id: EXISTING_DRIVER, operator_name: 'Shri Shyam Tanker Service', vehicle_number: 'RJ14-WT-2002', capacity_liters: 5000, price_per_liter: 0.32, is_certified: false, is_available: true, current_lat: 26.8440, current_lng: 75.8060, rating: 3.8, total_deliveries: 67, created_at: daysAgo(75) },
-    // Harsh Aqua — real Jaipur company, Triveni Nagar/Malviya Nagar
     { id: TANKERS.harsh1, owner_id: OWNERS.harsh, driver_id: DRIVERS.mahesh, operator_name: 'Harsh Aqua Water Suppliers', vehicle_number: 'RJ14-WT-3001', capacity_liters: 5000, price_per_liter: 0.45, is_certified: true, is_available: true, current_lat: 26.8730, current_lng: 75.8090, rating: 5.0, total_deliveries: 210, created_at: daysAgo(75) },
-    // Veer Teja — real Jaipur company, Mansarovar/Jagatpura
     { id: TANKERS.veer1, owner_id: OWNERS.veer, driver_id: DRIVERS.ram, operator_name: 'Veer Teja Water Supplier', vehicle_number: 'RJ14-WT-4001', capacity_liters: 3000, price_per_liter: 0.28, is_certified: false, is_available: true, current_lat: 26.8560, current_lng: 75.8190, rating: 4.5, total_deliveries: 134, created_at: daysAgo(70) },
     { id: TANKERS.veer2, owner_id: OWNERS.veer, driver_id: DRIVERS.sham, operator_name: 'Veer Teja Water Supplier', vehicle_number: 'RJ14-WT-4002', capacity_liters: 10000, price_per_liter: 0.25, is_certified: true, is_available: true, current_lat: 26.8530, current_lng: 75.8170, rating: 4.3, total_deliveries: 89, created_at: daysAgo(65) },
-    // Sunder Traders — real Jaipur company, Jhotwara
     { id: TANKERS.sunder, owner_id: EXISTING_OWNER, driver_id: DRIVERS.ganesh, operator_name: 'Sunder Traders Water Supply', vehicle_number: 'RJ14-WT-5001', capacity_liters: 5000, price_per_liter: 0.38, is_certified: true, is_available: true, current_lat: 26.9100, current_lng: 75.8100, rating: 4.1, total_deliveries: 312, created_at: daysAgo(80) },
   ], { onConflict: 'id' })
   if (tErr) { console.error('Tankers error:', tErr); errors++ }
 
-  // 7. BOOKINGS (varied statuses and dates)
   console.log('Inserting bookings...')
   const { error: bErr } = await sb.from('bookings').upsert([
-    // Delivered bookings (various dates, for anomaly + demand data)
     { id: BOOKINGS.b1, type: 'individual', status: 'delivered', tanker_id: TANKERS.balaji1, coordinator_id: null, ward_id: VAISHALI_WARD, resident_id: RESIDENTS.rahul, volume_ordered: 3000, volume_delivered: 3000, price_per_liter: 0.35, total_amount: 1050, delivery_address: '45, Vaishali Nagar Sector 3', delivery_lat: 26.8940, delivery_lng: 75.7755, scheduled_at: daysAgo(20), delivered_at: daysAgo(19), anomaly_flagged: false, anomaly_reason: null, cv_confirmed: true, created_at: daysAgo(20) },
     { id: BOOKINGS.b2, type: 'individual', status: 'delivered', tanker_id: TANKERS.shyam1, coordinator_id: null, ward_id: EXISTING_WARD, resident_id: RESIDENTS.vikram, volume_ordered: 5000, volume_delivered: 4800, price_per_liter: 0.30, total_amount: 1500, delivery_address: '12, Mansarovar Sector 7', delivery_lat: 26.8475, delivery_lng: 75.8025, scheduled_at: daysAgo(18), delivered_at: daysAgo(17), anomaly_flagged: false, anomaly_reason: null, cv_confirmed: true, created_at: daysAgo(18) },
     { id: BOOKINGS.b3, type: 'individual', status: 'delivered', tanker_id: TANKERS.harsh1, coordinator_id: null, ward_id: MALVIYA_WARD, resident_id: RESIDENTS.sakshi, volume_ordered: 2000, volume_delivered: 2000, price_per_liter: 0.45, total_amount: 900, delivery_address: '78, Malviya Nagar Block B', delivery_lat: 26.8720, delivery_lng: 75.8080, scheduled_at: daysAgo(15), delivered_at: daysAgo(14), anomaly_flagged: false, anomaly_reason: null, cv_confirmed: true, created_at: daysAgo(15) },
     { id: BOOKINGS.b4, type: 'individual', status: 'delivered', tanker_id: TANKERS.veer1, coordinator_id: null, ward_id: JAGATPURA_WARD, resident_id: RESIDENTS.deepak, volume_ordered: 3000, volume_delivered: 2900, price_per_liter: 0.28, total_amount: 840, delivery_address: '33, Jagatpura Getor Road', delivery_lat: 26.8555, delivery_lng: 75.8175, scheduled_at: daysAgo(12), delivered_at: daysAgo(11), anomaly_flagged: false, anomaly_reason: null, cv_confirmed: true, created_at: daysAgo(12) },
-    // ANOMALY BOOKING — charged way above average
     { id: BOOKINGS.b5, type: 'individual', status: 'delivered', tanker_id: TANKERS.shyam2, coordinator_id: null, ward_id: EXISTING_WARD, resident_id: EXISTING_RESIDENT, volume_ordered: 5000, volume_delivered: 5000, price_per_liter: 0.80, total_amount: 4000, delivery_address: '5, Mansarovar Sector 2', delivery_lat: 26.8460, delivery_lng: 75.8040, scheduled_at: daysAgo(10), delivered_at: daysAgo(9), anomaly_flagged: true, anomaly_reason: 'Price 167% above ward average of 0.30/L — possible price gouging', cv_confirmed: true, created_at: daysAgo(10) },
     { id: BOOKINGS.b6, type: 'individual', status: 'delivered', tanker_id: TANKERS.sunder, coordinator_id: null, ward_id: CIVIL_LINES_WARD, resident_id: RESIDENTS.neha, volume_ordered: 4000, volume_delivered: 4000, price_per_liter: 0.38, total_amount: 1520, delivery_address: '22, Civil Lines Metro Station Road', delivery_lat: 26.9130, delivery_lng: 75.7870, scheduled_at: daysAgo(8), delivered_at: daysAgo(7), anomaly_flagged: false, anomaly_reason: null, cv_confirmed: true, created_at: daysAgo(8) },
-    // Delivered 5-7 days ago (for nudge triggers)
     { id: BOOKINGS.b7, type: 'individual', status: 'delivered', tanker_id: TANKERS.balaji2, coordinator_id: null, ward_id: VAISHALI_WARD, resident_id: RESIDENTS.rahul, volume_ordered: 3000, volume_delivered: 3000, price_per_liter: 0.40, total_amount: 1200, delivery_address: '45, Vaishali Nagar Sector 3', delivery_lat: 26.8940, delivery_lng: 75.7755, scheduled_at: daysAgo(7), delivered_at: daysAgo(6), anomaly_flagged: false, anomaly_reason: null, cv_confirmed: true, created_at: daysAgo(7) },
-    // Dispatched (in progress)
     { id: BOOKINGS.b8, type: 'individual', status: 'dispatched', tanker_id: TANKERS.harsh1, coordinator_id: null, ward_id: MALVIYA_WARD, resident_id: RESIDENTS.sakshi, volume_ordered: 5000, volume_delivered: null, price_per_liter: 0.45, total_amount: 2250, delivery_address: '78, Malviya Nagar Block B', delivery_lat: 26.8720, delivery_lng: 75.8080, scheduled_at: daysFromNow(1), delivered_at: null, anomaly_flagged: false, anomaly_reason: null, cv_confirmed: null, created_at: daysAgo(1) },
-    // Confirmed
     { id: BOOKINGS.b9, type: 'individual', status: 'confirmed', tanker_id: TANKERS.veer2, coordinator_id: null, ward_id: JAGATPURA_WARD, resident_id: RESIDENTS.deepak, volume_ordered: 10000, volume_delivered: null, price_per_liter: 0.25, total_amount: 2500, delivery_address: '33, Jagatpura Getor Road', delivery_lat: 26.8555, delivery_lng: 75.8175, scheduled_at: daysFromNow(2), delivered_at: null, anomaly_flagged: false, anomaly_reason: null, cv_confirmed: null, created_at: daysAgo(2) },
-    // Community booking — open
     { id: BOOKINGS.b10, type: 'community', status: 'open', tanker_id: null, coordinator_id: COORDS.anjali, ward_id: VAISHALI_WARD, resident_id: COORDS.anjali, volume_ordered: 15000, volume_delivered: null, price_per_liter: 0.30, total_amount: 4500, delivery_address: 'Vaishali Nagar Community Hall', delivery_lat: 26.8935, delivery_lng: 75.7750, scheduled_at: daysFromNow(4), delivered_at: null, anomaly_flagged: false, anomaly_reason: null, cv_confirmed: null, created_at: daysAgo(1) },
-    // Pending
     { id: BOOKINGS.b11, type: 'individual', status: 'pending', tanker_id: TANKERS.balaji1, coordinator_id: null, ward_id: VAISHALI_WARD, resident_id: RESIDENTS.rahul, volume_ordered: 2000, volume_delivered: null, price_per_liter: 0.35, total_amount: 700, delivery_address: '45, Vaishali Nagar Sector 3', delivery_lat: 26.8940, delivery_lng: 75.7755, scheduled_at: daysFromNow(3), delivered_at: null, anomaly_flagged: false, anomaly_reason: null, cv_confirmed: null, created_at: now.toISOString() },
-    // Open individual
     { id: BOOKINGS.b12, type: 'individual', status: 'open', tanker_id: null, coordinator_id: null, ward_id: CIVIL_LINES_WARD, resident_id: RESIDENTS.neha, volume_ordered: 3000, volume_delivered: null, price_per_liter: 0.40, total_amount: 1200, delivery_address: '22, Civil Lines Metro Station Road', delivery_lat: 26.9130, delivery_lng: 75.7870, scheduled_at: daysFromNow(5), delivered_at: null, anomaly_flagged: false, anomaly_reason: null, cv_confirmed: null, created_at: now.toISOString() },
   ], { onConflict: 'id' })
   if (bErr) { console.error('Bookings error:', bErr); errors++ }
 
-  // 8. BOOKING PARTICIPANTS (for community booking)
   console.log('Inserting participants...')
   const { error: pErr } = await sb.from('booking_participants').upsert([
     { id: 'f1000001-0000-0000-0000-000000000001', booking_id: BOOKINGS.b10, user_id: COORDS.anjali, share_liters: 5000, share_amount: 1500, payment_status: 'paid', payment_method: 'upi', payment_ref: null, joined_at: daysAgo(1) },
@@ -185,7 +159,6 @@ async function seed() {
   ], { onConflict: 'id' })
   if (pErr) { console.error('Participants error:', pErr); errors++ }
 
-  // 9. HEATWAVE ALERTS (Jaipur, active)
   console.log('Inserting heatwave alerts...')
   const { error: hErr } = await sb.from('heatwave_alerts').upsert([
     { id: 'aaaa0001-0000-0000-0000-000000000001', district: 'Jaipur', state: 'Rajasthan', temperature: 43.2, feels_like: 47.5, severity: 'warning', ai_advisory: 'Jaipur mein heatwave warning hai. 12 PM se 4 PM tak ghar mein rahein. Paani peete rahein. AC ya cooler chalayein.', cooling_centers: null, ors_points: null, active: true, created_at: daysAgo(2), expires_at: daysFromNow(5) },
@@ -194,14 +167,12 @@ async function seed() {
   ], { onConflict: 'id' })
   if (hErr) { console.error('Heatwave error:', hErr); errors++ }
 
-  // 10. ANOMALY LOGS
   console.log('Inserting anomaly logs...')
   const { error: aErr } = await sb.from('anomaly_logs').upsert([
     { id: 'aaaa0001-0000-0000-0000-000000000010', booking_id: BOOKINGS.b5, tanker_id: TANKERS.shyam2, ward_id: EXISTING_WARD, district_avg_price: 0.30, charged_price: 0.80, percent_above: 167, ai_reason: 'Price is 167% above ward average. Likely price gouging during water shortage. Tanker operator may be exploiting high demand in Mansarovar.', resolved: false, created_at: daysAgo(10) },
   ], { onConflict: 'id' })
   if (aErr) { console.error('Anomaly logs error:', aErr); errors++ }
 
-  // 11. NUDGE LOGS
   console.log('Inserting nudge logs...')
   const { error: nErr } = await sb.from('nudge_log').upsert([
     { id: 'bbbb0001-0000-0000-0000-000000000001', user_id: RESIDENTS.rahul, type: 'predictive', message: 'Rahul ji, aapka last order 7 din pehle tha. Garmi badh rahi hai — paani ka stock rakhein. JalSetu se abhi book karein!', read: false, created_at: daysAgo(1) },
@@ -212,7 +183,6 @@ async function seed() {
   ], { onConflict: 'id' })
   if (nErr) { console.error('Nudge logs error:', nErr); errors++ }
 
-  // 12. REVIEWS
   console.log('Inserting reviews...')
   const { error: rvErr } = await sb.from('reviews').upsert([
     { id: 'cccc0001-0000-0000-0000-000000000001', booking_id: BOOKINGS.b1, user_id: RESIDENTS.rahul, tanker_id: TANKERS.balaji1, rating: 5, comment: 'Bahut acha tanker! Samay pe aaya aur paani saaf tha. Highly recommend Balaji Water.', created_at: daysAgo(19) },
@@ -224,7 +194,6 @@ async function seed() {
   ], { onConflict: 'id' })
   if (rvErr) { console.error('Reviews error:', rvErr); errors++ }
 
-  // 13. PAYMENTS
   console.log('Inserting payments...')
   const { error: payErr } = await sb.from('payments').upsert([
     { id: 'dddd0001-0000-0000-0000-000000000001', booking_id: BOOKINGS.b1, user_id: RESIDENTS.rahul, amount: 1050, method: 'upi', status: 'success', razorpay_order_id: null, razorpay_payment_id: null, created_at: daysAgo(20) },

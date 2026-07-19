@@ -44,7 +44,6 @@ export default function RegisterPage() {
           setWards(data)
         }
       } catch {
-        //wards unavailable
       }
     }
     const fetchOwners = async () => {
@@ -55,7 +54,6 @@ export default function RegisterPage() {
           setOwners(data)
         }
       } catch {
-        //owners unavailable
       }
     }
     fetchWards()

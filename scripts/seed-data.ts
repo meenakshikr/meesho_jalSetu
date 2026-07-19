@@ -138,7 +138,6 @@ function daysAgo(n: number): Date {
 async function main() {
   console.log('=== JALSETU SEED SCRIPT ===\n')
 
-  // Clear old data (order matters: delete child tables first)
   console.log('Clearing old data...')
   await supaDelete('driver_location_history', 'driver_id=neq.00000000-0000-0000-0000-000000000000')
   await supaDelete('driver_locations', 'driver_id=neq.00000000-0000-0000-0000-000000000000')
@@ -148,7 +147,6 @@ async function main() {
   await supaDelete('bookings', 'id=neq.00000000-0000-0000-0000-000000000000')
   console.log('  Done.\n')
 
-  // Upsert wards
   console.log('Upserting wards...')
   const wards = [
     { id: WARD_MANSAROVAR, name: 'Mansarovar Ward 12', city: 'Jaipur', district: 'Jaipur', state: 'Rajasthan', lat: 26.8467, lng: 75.8026 },
@@ -161,7 +159,6 @@ async function main() {
   await supaUpsert('wards', wards, 'id')
   console.log(`  Upserted ${wards.length} wards\n`)
 
-  // Assign residents to different wards
   console.log('Assigning residents to wards...')
   await supaUpdate('users', { ward_id: WARD_VAISHALI }, `id=eq.${R1_ID}`)
   await supaUpdate('users', { ward_id: WARD_MANSAROVAR }, `id=eq.${R2_ID}`)
@@ -173,7 +170,6 @@ async function main() {
   const allDrivers = [DRIVER1_ID, DRIVER2_ID, DRIVER3_ID, DRIVER4_ID]
   const allResidents = [R1_ID, R2_ID, R3_ID]
 
-  // Update tankers with correct drivers and properties (don't change vehicle_number to avoid unique constraint)
   console.log('Updating tankers...')
   const tankerUpdates = [
     { id: T3, owner_id: OWNER_ID, driver_id: DRIVER3_ID, operator_name: 'Ganga Water Supply', capacity_liters: 7500, price_per_liter: 1.20, is_certified: true, current_lat: 26.885, current_lng: 75.807, rating: 4.3, total_deliveries: 156, is_available: true },
@@ -191,7 +187,6 @@ async function main() {
 
   const allTankers = [T1, T2, T3, T4]
 
-  // Create 7 days of delivered bookings across all wards
   console.log('Creating delivery history across all wards...')
   const bookingIds: string[] = []
 
@@ -238,7 +233,6 @@ async function main() {
   }
   console.log(`  Total delivered: ${bookingIds.length}\n`)
 
-  // Create reviews
   console.log('Creating reviews...')
   let reviewCount = 0
   for (const bid of bookingIds) {
@@ -257,7 +251,6 @@ async function main() {
   }
   console.log(`  Created ${reviewCount} reviews\n`)
 
-  // Active bookings for live demo - one per driver across different wards
   console.log('Creating active bookings (one per driver)...')
 
   const ab1 = await supaInsert('bookings', {
@@ -296,7 +289,6 @@ async function main() {
   })
   console.log(`  driver4 -> confirmed -> ${ab4?.[0]?.id}\n`)
 
-  // Create GPS locations for active drivers
   console.log('Creating driver GPS locations...')
   const driverLocations = [
     { driver_id: DRIVER1_ID, lat: 26.9115, lng: 75.7265, booking_id: ab1?.[0]?.id },
@@ -309,7 +301,6 @@ async function main() {
   }
   console.log('  Done.\n')
 
-  // Update heatwave expiry
   console.log('Updating heatwave alert...')
   await supaUpdate('heatwave_alerts', { expires_at: new Date(Date.now() + 86400000 * 2).toISOString() }, 'active=eq.true')
   console.log('  Done.\n')

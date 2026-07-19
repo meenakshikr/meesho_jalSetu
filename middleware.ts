@@ -44,7 +44,6 @@ export async function middleware(request: NextRequest) {
     const { data } = await supabase.auth.getUser()
     user = data.user
   } catch {
-    // Auth session invalid — treat as logged out
   }
 
   const pathname = request.nextUrl.pathname
