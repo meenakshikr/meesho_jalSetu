@@ -77,6 +77,33 @@ export async function PATCH(
       }
     }
 
+    if (body.status === 'disputed' && booking) {
+      const reason = body.anomaly_reason || 'Short delivery detected by CV verification'
+      const nudges: { user_id: string; type: string; message: string; read: boolean }[] = []
+
+      if (booking.resident_id) {
+        nudges.push({
+          user_id: booking.resident_id,
+          type: 'dispute',
+          message: `Your water delivery was short. ${reason}. A coordinator is reviewing this.`,
+          read: false,
+        })
+      }
+
+      if (booking.coordinator_id) {
+        nudges.push({
+          user_id: booking.coordinator_id,
+          type: 'dispute',
+          message: `Short delivery flagged for booking at ${booking.delivery_address || 'your ward'}. ${reason}. Please review.`,
+          read: false,
+        })
+      }
+
+      if (nudges.length > 0) {
+        await supabase.from('nudge_log').insert(nudges)
+      }
+    }
+
     return NextResponse.json(booking)
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

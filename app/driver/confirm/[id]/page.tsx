@@ -461,12 +461,12 @@ export default function ConfirmCollectPage({ params }: Props) {
           )}
 
           <button
-            disabled={!allCashCollected || delivering}
+            disabled={!allCashCollected || delivering || booking.status === 'disputed'}
             onClick={handleDeliveryComplete}
             className="w-full bg-teal-600 hover:bg-teal-500 active:bg-teal-700 text-white font-semibold rounded-xl h-12 flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
           >
             <Truck className="w-4 h-4" />
-            {delivering ? 'Completing...' : 'Complete Delivery'}
+            {booking.status === 'disputed' ? 'Disputed — Cannot Complete' : delivering ? 'Completing...' : 'Complete Delivery'}
           </button>
         </div>
       </motion.div>

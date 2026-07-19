@@ -31,7 +31,6 @@ export default function ActiveDeliveryPage({ params }: Props) {
     after_fill_percent?: number
   } | null>(null)
   const [cvLoading, setCvLoading] = useState(false)
-  const [disputing, setDisputing] = useState(false)
   const [driverLoc, setDriverLoc] = useState<{ lat: number; lng: number } | null>(null)
   const [routeCoords, setRouteCoords] = useState<{ lat: number; lng: number }[]>([])
   const [tracking, setTracking] = useState(false)
@@ -143,7 +142,7 @@ export default function ActiveDeliveryPage({ params }: Props) {
       if (!res.ok) throw new Error('CV scan failed')
       const data = await res.json()
       const confidenceMap: Record<string, number> = { high: 0.9, medium: 0.65, low: 0.3 }
-      setCvResult({
+      const result = {
         volume_estimate: data.estimated_liters ?? data.volume_estimate ?? 0,
         estimated_liters: data.estimated_liters ?? 0,
         confidence: typeof data.confidence === 'number' ? data.confidence : (confidenceMap[data.confidence] ?? 0.5),
@@ -151,28 +150,25 @@ export default function ActiveDeliveryPage({ params }: Props) {
         discrepancy_liters: data.discrepancy_liters ?? 0,
         before_fill_percent: data.before_fill_percent,
         after_fill_percent: data.after_fill_percent,
-      })
+      }
+      setCvResult(result)
+
+      if (result.verdict === 'short') {
+        await fetch(`/api/bookings/${params.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: 'disputed',
+            anomaly_flagged: true,
+            anomaly_reason: `Short delivery: ${result.discrepancy_liters}L less than ordered (${((result.discrepancy_liters / (booking?.volume_ordered || 1)) * 100).toFixed(1)}% discrepancy)`,
+          }),
+        })
+        setBooking(prev => prev ? { ...prev, status: 'disputed' as const, anomaly_flagged: true } : prev)
+      }
     } catch (err) {
       alert(err instanceof Error ? err.message : 'CV scan failed')
     } finally {
       setCvLoading(false)
-    }
-  }
-
-  async function handleDispute() {
-    setDisputing(true)
-    try {
-      const res = await fetch(`/api/bookings/${params.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'disputed' }),
-      })
-      if (!res.ok) throw new Error('Failed to dispute')
-      router.push('/driver')
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to dispute')
-    } finally {
-      setDisputing(false)
     }
   }
 
@@ -330,14 +326,14 @@ export default function ActiveDeliveryPage({ params }: Props) {
           </div>
 
           {cvResult && cvResult.verdict === 'short' && (
-            <div className="bg-[#0A2744] border border-[#1E3A5F] rounded-2xl p-4">
+            <div className="bg-red-950 border border-red-900 rounded-2xl p-4">
               <div className="flex items-center gap-2 mb-3">
-                <AlertTriangle className="w-5 h-5 text-amber-400" />
-                <p className="text-sm font-semibold text-amber-400">
+                <AlertTriangle className="w-5 h-5 text-red-400" />
+                <p className="text-sm font-semibold text-red-400">
                   Short Delivery Detected
                 </p>
               </div>
-              <div className="space-y-1 mb-4">
+              <div className="space-y-1 mb-3">
                 {cvResult.before_fill_percent != null && cvResult.after_fill_percent != null && (
                   <p className="text-sm text-slate-400">
                     Tank went from {cvResult.before_fill_percent}% to {cvResult.after_fill_percent}%
@@ -353,14 +349,11 @@ export default function ActiveDeliveryPage({ params }: Props) {
                   Confidence: {(cvResult.confidence * 100).toFixed(0)}%
                 </p>
               </div>
-              <button
-                onClick={handleDispute}
-                disabled={disputing}
-                className="w-full bg-red-600 hover:bg-red-500 active:bg-red-700 text-white font-semibold rounded-xl h-12 flex items-center justify-center gap-2 transition-colors"
-              >
-                <AlertTriangle className="w-4 h-4" />
-                {disputing ? 'Filing Dispute...' : 'File Dispute'}
-              </button>
+              <div className="bg-red-900/30 border border-red-800 rounded-xl p-3">
+                <p className="text-sm text-red-300 font-medium">
+                  Dispute raised automatically. Coordinator and resident have been notified. You cannot override this.
+                </p>
+              </div>
             </div>
           )}
 
