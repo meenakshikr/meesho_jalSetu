@@ -1,11 +1,4 @@
--- JalSetu Demo Seed Data
--- Bengaluru wards, realistic tanker operators, proper pricing
--- Run: psql -f scripts/seed.sql or execute in Supabase SQL Editor
--- Idempotent: uses ON CONFLICT DO NOTHING throughout
 
--- ============================================================
--- WARDS (5 Bengaluru wards across different zones)
--- ============================================================
 INSERT INTO wards (id, name, city, district, state, lat, lng, created_at) VALUES
   ('a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d', 'Koramangala',    'Bengaluru', 'Bengaluru South', 'Karnataka', 12.9352, 77.6245, now() - interval '90 days'),
   ('b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e', 'HSR Layout',     'Bengaluru', 'Bengaluru South', 'Karnataka', 12.9116, 77.6389, now() - interval '90 days'),
@@ -14,11 +7,9 @@ INSERT INTO wards (id, name, city, district, state, lat, lng, created_at) VALUES
   ('e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8091', 'Banashankari',   'Bengaluru', 'Bengaluru South', 'Karnataka', 12.9250, 77.5475, now() - interval '90 days')
 ON CONFLICT (id) DO NOTHING;
 
--- ============================================================
--- AUTH USERS (fixed UUIDs for Supabase auth.users references)
--- ============================================================
+
 INSERT INTO auth.users (id, instance_id, role, aud, email, encrypted_password, created_at, updated_at) VALUES
-  -- Residents
+  
   ('11111111-1111-1111-1111-111111111111', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'priya@example.com',    crypt('demo123', gen_salt('bf')), now() - interval '90 days', now() - interval '90 days'),
   ('22222222-2222-2222-2222-222222222222', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'rajesh@example.com',   crypt('demo123', gen_salt('bf')), now() - interval '90 days', now() - interval '90 days'),
   ('33333333-3333-3333-3333-333333333333', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'anita@example.com',    crypt('demo123', gen_salt('bf')), now() - interval '90 days', now() - interval '90 days'),
@@ -37,9 +28,9 @@ INSERT INTO auth.users (id, instance_id, role, aud, email, encrypted_password, c
   ('dddddddd-dddd-dddd-dddd-dddddddddddd', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'owner3@example.com',   crypt('demo123', gen_salt('bf')), now() - interval '90 days', now() - interval '90 days')
 ON CONFLICT (id) DO NOTHING;
 
--- ============================================================
+
 -- USERS (app profiles linked to auth)
--- ============================================================
+
 INSERT INTO users (id, auth_id, name, phone, role, ward_id, language, subsidy_points, created_at) VALUES
   -- Residents (5)
   ('10000000-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', 'Priya Sharma',     '9876543210', 'resident',     'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d', 'hi', 150, now() - interval '90 days'),
@@ -60,9 +51,9 @@ INSERT INTO users (id, auth_id, name, phone, role, ward_id, language, subsidy_po
   ('10000000-0000-0000-0000-000000000013', 'dddddddd-dddd-dddd-dddd-dddddddddddd', 'Karnataka Water Co','9876543222', 'owner',       NULL, 'en', 0, now() - interval '90 days')
 ON CONFLICT (id) DO NOTHING;
 
--- ============================================================
+
 -- TANKERS (8 tankers with varied specs)
--- ============================================================
+
 INSERT INTO tankers (id, owner_id, driver_id, operator_name, vehicle_number, capacity_liters, price_per_liter, is_certified, is_available, current_lat, current_lng, rating, total_deliveries, created_at) VALUES
   -- Owner 1 (Srinivas Reddy) — 3 tankers
   ('f0000001-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000011', '10000000-0000-0000-0000-000000000008', 'Srinivas Water Supply',   'KA-01-AB-1234', 5000, 4.50, true,  true, 12.9200, 77.6400, 4.7, 142, now() - interval '85 days'),
@@ -77,9 +68,9 @@ INSERT INTO tankers (id, owner_id, driver_id, operator_name, vehicle_number, cap
   ('f0000008-0000-0000-0000-000000000008', '10000000-0000-0000-0000-000000000013', '10000000-0000-0000-0000-000000000008', 'Karnataka Water Supply',  'KA-03-MN-9012', 3000, 3.50, false, false, 12.9100, 77.5300, 3.8, 23,  now() - interval '60 days')
 ON CONFLICT (id) DO NOTHING;
 
--- ============================================================
+
 -- BOOKINGS (15 bookings, mix of statuses and types)
--- ============================================================
+
 INSERT INTO bookings (id, type, status, tanker_id, coordinator_id, ward_id, resident_id, volume_ordered, volume_delivered, price_per_liter, total_amount, delivery_address, delivery_lat, delivery_lng, scheduled_at, delivered_at, anomaly_flagged, anomaly_reason, cv_confirmed, created_at) VALUES
   -- Delivered bookings (5)
   ('b0000001-0000-0000-0000-000000000001', 'individual', 'delivered',   'f0000001-0000-0000-0000-000000000001', NULL, 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d', '10000000-0000-0000-0000-000000000001', 2000, 2000, 4.50, 9000, '42, 1st Cross, Koramangala', 12.9350, 77.6240, now() - interval '25 days', now() - interval '24 days', false, NULL, true, now() - interval '25 days'),
@@ -103,9 +94,9 @@ INSERT INTO bookings (id, type, status, tanker_id, coordinator_id, ward_id, resi
   ('b0000015-0000-0000-0000-000000000015', 'individual', 'delivered',   'f0000007-0000-0000-0000-000000000007', NULL, 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8091', '10000000-0000-0000-0000-000000000005', 1500, 1500, 4.25, 6375, '15, Banashankari 2nd Stage', 12.9240, 77.5480, now() - interval '6 days', now() - interval '5 days', false, NULL, true, now() - interval '6 days')
 ON CONFLICT (id) DO NOTHING;
 
--- ============================================================
+
 -- BOOKING PARTICIPANTS (for community bookings)
--- ============================================================
+
 INSERT INTO booking_participants (id, booking_id, user_id, share_liters, share_amount, payment_status, payment_method, joined_at) VALUES
   -- Booking 2 (community, delivered)
   ('p0000001-0000-0000-0000-000000000001', 'b0000002-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000006', 1500, 7500, 'paid', 'upi', now() - interval '20 days'),
@@ -124,9 +115,9 @@ INSERT INTO booking_participants (id, booking_id, user_id, share_liters, share_a
   ('p0000011-0000-0000-0000-000000000011', 'b0000012-0000-0000-0000-000000000012', '10000000-0000-0000-0000-000000000007', 2000, 9000, 'pending', NULL, now() - interval '1 day')
 ON CONFLICT (id) DO NOTHING;
 
--- ============================================================
+
 -- HEATWAVE ALERTS (3 active alerts, different severity)
--- ============================================================
+
 INSERT INTO heatwave_alerts (id, district, state, temperature, feels_like, severity, ai_advisory, active, created_at, expires_at) VALUES
   ('h0000001-0000-0000-0000-000000000001', 'Bengaluru South', 'Karnataka', 41.2, 44.5, 'warning',
    'Bengaluru South mein heatwave warning hai. 12 PM se 4 PM tak ghar mein rahein. Paani peete rahein. Bacchon aur buzurgon ka khayal rakhein.',
@@ -139,9 +130,9 @@ INSERT INTO heatwave_alerts (id, district, state, temperature, feels_like, sever
    true, now() - interval '1 day', now() + interval '6 days')
 ON CONFLICT (id) DO NOTHING;
 
--- ============================================================
+
 -- NUDGE LOGS (5 nudge entries)
--- ============================================================
+
 INSERT INTO nudge_log (id, user_id, type, message, read, created_at) VALUES
   ('n0000001-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'predictive',
    'Hi Priya! Aapka last order 7 din pehle tha. Garmi badh rahi hai — paani ka stock rakhein. JalSetu se abhi book karein!',
@@ -160,9 +151,9 @@ INSERT INTO nudge_log (id, user_id, type, message, read, created_at) VALUES
    false, now() - interval '1 day')
 ON CONFLICT (id) DO NOTHING;
 
--- ============================================================
+
 -- ANOMALY LOGS (3 anomaly entries)
--- ============================================================
+
 INSERT INTO anomaly_logs (id, booking_id, tanker_id, ward_id, district_avg_price, charged_price, percent_above, ai_reason, resolved, created_at) VALUES
   ('a000001-0000-0000-0000-000000000001', 'b0000004-0000-0000-0000-000000000004', 'f0000005-0000-0000-0000-000000000005', 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
    4.50, 3.75, -16.7, 'Price is below district average. Possible data entry error or promotional pricing. No price gouging detected.', false, now() - interval '15 days'),
@@ -172,9 +163,8 @@ INSERT INTO anomaly_logs (id, booking_id, tanker_id, ward_id, district_avg_price
    4.75, 4.50, -5.3, 'Price slightly below average. No anomaly detected. Tanker has good rating and delivery history.', false, now() - interval '25 days')
 ON CONFLICT (id) DO NOTHING;
 
--- ============================================================
 -- REVIEWS (5 reviews)
--- ============================================================
+
 INSERT INTO reviews (id, booking_id, user_id, tanker_id, rating, comment, created_at) VALUES
   ('r0000001-0000-0000-0000-000000000001', 'b0000001-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'f0000001-0000-0000-0000-000000000001',
    5, 'Bahut acha tanker! Samay pe aaya aur paani saaf tha. Highly recommend.', now() - interval '23 days'),
@@ -188,9 +178,9 @@ INSERT INTO reviews (id, booking_id, user_id, tanker_id, rating, comment, create
    5, 'Quick delivery and very polite driver. Will book again!', now() - interval '5 days')
 ON CONFLICT (id) DO NOTHING;
 
--- ============================================================
+
 -- PAYMENTS (linked to bookings)
--- ============================================================
+
 INSERT INTO payments (id, booking_id, user_id, amount, method, status, created_at) VALUES
   ('pay00001-0000-0000-0000-000000000001', 'b0000001-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 9000, 'upi', 'success', now() - interval '25 days'),
   ('pay00002-0000-0000-0000-000000000002', 'b0000003-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000005', 12750, 'cash', 'success', now() - interval '18 days'),

@@ -1,8 +1,8 @@
-# JalSetu — जल सेतु
+# JalSetu
 
 **Agentic AI Water Delivery Platform for India**
 
-JalSetu is a role-based water tanker booking and management platform powered by AI. It connects residents, community coordinators, tanker drivers, and tanker owners through a unified system that leverages Claude AI for intelligent tanker ranking, anomaly detection, computer vision volume verification, heatwave-responsive advisories, demand forecasting, and predictive engagement.
+JalSetu is a role-based water tanker booking and management platform that connects residents, community coordinators, tanker drivers, and tanker owners through a unified system with AI-powered demand forecasting, anomaly detection, CV volume verification, and heatwave advisories.
 
 Built for Indian cities where water tanker delivery is a critical daily need — especially during heatwave seasons.
 
@@ -10,50 +10,57 @@ Built for Indian cities where water tanker delivery is a critical daily need —
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 14 (App Router) |
-| Database | Supabase (PostgreSQL + Auth) |
-| AI | Anthropic Claude API (claude-sonnet-4-20250514) |
-| Payments | Razorpay (UPI, Cards, Netbanking) |
-| Styling | Tailwind CSS |
-| Animations | Framer Motion |
-| Icons | Lucide React |
-| Fonts | Geist Sans |
-| Language | TypeScript |
+| Layer | Technology | Version |
+|-------|-----------|---------|
+| Framework | Next.js (App Router) | 14.2.35 |
+| Language | TypeScript | ^5 |
+| Database | Supabase (PostgreSQL + Auth + Realtime) | ^2.110.7 |
+| AI Text | Groq (llama-3.3-70b-versatile) | — |
+| AI Vision | Google Gemini (gemini-3.1-flash-lite) | ^0.24.1 |
+| Payments | Razorpay (UPI, Cards, Netbanking) | — |
+| Styling | Tailwind CSS | ^3.4.1 |
+| Animations | Framer Motion | ^12.42.2 |
+| Maps | Leaflet + React-Leaflet | ^1.9.4 |
+| Icons | Lucide React | ^1.24.0 |
+| UI | shadcn/ui + class-variance-authority | ^0.7.1 |
+| Fonts | Geist Sans | ^1.7.2 |
 
 ---
 
 ## Features by Role
 
 ### Resident
-- Browse available tankers in their ward
+- Browse available tankers in marketplace
 - Book water for individual or community use
 - Join community bookings with bill splitting
-- Real-time order tracking
-- AI-verified delivery volume via camera
+- Real-time GPS order tracking with live map
+- AI-verified delivery volume via camera (CV scan)
 - Payment via UPI, cash, or subsidy points
 - View receipts and booking history
-- Receive personalized nudges when water is due
+- Personalized nudges when water is due
+- Heatwave alerts for their ward
 
 ### Coordinator
-- Create and manage community bookings
+- Create and manage community bookings for their ward
 - Invite residents to join group orders
 - Dispatch assigned tankers
-- View heatwave alerts and advisories
+- View heatwave alerts and AI advisories
 - Monitor booking progress with participant tracking
-- Access booking and delivery history
+- View booking and delivery history
+- Anomaly alerts for price gouging
 
 ### Driver
-- View assigned deliveries
-- Confirm delivery with photo capture
-- Update delivery status (en route → delivered)
+- View assigned deliveries with active/completed tabs
+- Update delivery status (en route, arrived, loading, delivering, delivered)
+- Confirm delivery with CV volume verification
+- GPS location tracking via Leaflet maps
 - View delivery history
-- Computer vision assists volume verification
 
 ### Owner
-- Manage fleet of tankers (add, update, toggle availability)
-- View earnings and fleet statistics
+- Fleet dashboard with all tankers and drivers
+- View incoming booking requests
+- Assign drivers to bookings
+- Earnings and fleet statistics
 - Demand forecast dashboard for ward-level predictions
 - Tanker performance reviews and ratings
 
@@ -61,18 +68,16 @@ Built for Indian cities where water tanker delivery is a critical daily need —
 
 ## AI Features
 
-JalSetu integrates Claude AI across six core endpoints:
+| Endpoint | Purpose | Model |
+|----------|---------|-------|
+| `/api/ai/rank-tankers` | Ranks tankers by price, distance, rating, capacity | Groq llama-3.3-70b |
+| `/api/ai/anomaly-check` | Detects price gouging vs district averages | Groq llama-3.3-70b |
+| `/api/ai/cv-volume` | Computer vision volume verification from photos | Gemini 3.1-flash-lite |
+| `/api/ai/heatwave-advisory` | Hinglish heatwave advisories with actions | Groq llama-3.3-70b |
+| `/api/ai/demand-forecast` | Ward-level 7-day demand prediction | Groq llama-3.3-70b |
+| `/api/ai/predictive-nudge` | Personalized re-engagement messages | Groq llama-3.3-70b |
 
-| Endpoint | Purpose |
-|----------|---------|
-| `/api/ai/rank-tankers` | Ranks available tankers by price, distance, rating, capacity, and heatwave severity |
-| `/api/ai/anomaly-check` | Detects price gouging and volume discrepancies by comparing against district averages |
-| `/api/ai/cv-volume` | Computer vision analysis of tanker delivery photos to verify water volume |
-| `/api/ai/heatwave-advisory` | Generates Hinglish heatwave advisories with recommended actions based on severity |
-| `/api/ai/demand-forecast` | Predicts ward-level water demand for the next 7 days using booking history |
-| `/api/ai/predictive-nudge` | Generates personalized re-engagement messages for inactive residents |
-
-All AI endpoints use a shared `lib/ai.ts` helper that wraps the Anthropic SDK with JSON parsing, image support, and graceful fallbacks.
+AI wrapper lives in `lib/gemini.ts` — handles Groq for text tasks, Gemini for vision, with retry and backoff.
 
 ---
 
@@ -81,13 +86,14 @@ All AI endpoints use a shared `lib/ai.ts` helper that wraps the Anthropic SDK wi
 ### Prerequisites
 - Node.js 18+
 - Supabase project (with PostgreSQL database)
-- Anthropic API key
+- Groq API key (free tier)
+- Google AI API key (free tier)
 - Razorpay account (optional, for payments)
 
 ### 1. Clone and Install
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/meenakshikr/meesho_jalSetu.git
 cd jalsetu
 npm install
 ```
@@ -102,6 +108,10 @@ NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
+# AI
+GROQ_API_KEY=your-groq-api-key
+GOOGLE_AI_API_KEY=your-google-ai-api-key
+
 # Razorpay (optional)
 RAZORPAY_KEY_ID=
 RAZORPAY_KEY_SECRET=
@@ -110,47 +120,48 @@ NEXT_PUBLIC_RAZORPAY_KEY_ID=
 # App
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 
-# Cron (for scheduled tasks)
+# Cron
 CRON_SECRET=
-
-# AI
-ANTHROPIC_API_KEY=your-anthropic-api-key
 ```
 
-### 3. Database Setup
-
-Run the migration SQL in your Supabase SQL Editor or via `psql`:
+### 3. Seed Demo Data
 
 ```bash
-# If using Supabase CLI
-supabase db push
-
-# Or paste the schema directly in Supabase Dashboard → SQL Editor
+npx tsx scripts/seed-data.ts
 ```
 
-### 4. Seed Demo Data
+This creates:
+- 6 Jaipur wards (Mansarovar, Vaishali Nagar, Malviya Nagar, Civil Lines, Tonk Road, Jagatpura)
+- 8 tankers across 2 owners (all 7500L+ capacity)
+- 10 users (3 residents across different wards, 4 drivers, 1 coordinator, 2 owners)
+- 25+ delivered bookings across all wards with GPS coordinates
+- 18+ reviews
+- 4 active bookings (one per driver)
+- Driver GPS locations
+- Active heatwave alert
 
-```bash
-psql -f scripts/seed.sql
-```
-
-Or paste `scripts/seed.sql` into the Supabase SQL Editor and execute.
-
-The seed data includes:
-- 5 Bengaluru wards (Koramangala, HSR Layout, Whitefield, Yelahanka, Banashankari)
-- 8 tankers across 3 operators with varied capacities and pricing
-- 10 users (5 residents, 2 coordinators, 3 drivers, 3 owners)
-- 15 bookings in various statuses
-- 3 active heatwave alerts
-- 5 nudge logs, 3 anomaly logs, 5 reviews
-
-### 5. Run Development Server
+### 4. Run Development Server
 
 ```bash
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+### Test Accounts (password: `password123`)
+
+| Account | Role | Ward |
+|---------|------|------|
+| `owner@test.com` | Owner | — |
+| `owner2@test.com` | Owner | — |
+| `driver@test.com` | Driver | — |
+| `driver2@test.com` | Driver | — |
+| `driver3@test.com` | Driver | — |
+| `driver4@test.com` | Driver | — |
+| `coordinator@test.com` | Coordinator | Mansarovar Ward 12 |
+| `resident@test.com` | Resident | Vaishali Nagar Ward 8 |
+| `resident2@test.com` | Resident | Mansarovar Ward 12 |
+| `resident3@test.com` | Resident | Civil Lines Ward 3 |
 
 ---
 
@@ -159,46 +170,89 @@ Open [http://localhost:3000](http://localhost:3000).
 ```
 jalsetu/
 ├── app/
-│   ├── (auth)/              # Login and register pages
+│   ├── (auth)/                 # Login and register pages
 │   │   ├── login/
 │   │   └── register/
 │   ├── api/
-│   │   ├── ai/              # AI-powered endpoints
+│   │   ├── ai/                 # AI-powered endpoints
 │   │   │   ├── anomaly-check/
 │   │   │   ├── cv-volume/
 │   │   │   ├── demand-forecast/
 │   │   │   ├── heatwave-advisory/
 │   │   │   ├── predictive-nudge/
 │   │   │   └── rank-tankers/
-│   │   ├── auth/            # Authentication (login, logout, register, me)
-│   │   ├── bookings/        # Booking CRUD + join endpoint
-│   │   ├── cron/            # Scheduled tasks (heatwave check, nudges)
-│   │   ├── heatwave/        # Heatwave alert queries
-│   │   ├── nudges/          # Nudge log retrieval
-│   │   ├── owner/           # Owner fleet and stats
-│   │   ├── payments/        # Payment creation and webhooks
-│   │   ├── receipts/        # Receipt generation
-│   │   ├── reviews/         # Tanker reviews
-│   │   ├── tankers/         # Tanker CRUD
-│   │   └── wards/           # Ward listing
-│   ├── coordinator/         # Coordinator dashboard and pages
-│   ├── driver/              # Driver dashboard and delivery flow
-│   ├── owner/               # Owner dashboard, fleet, demand
-│   └── resident/            # Resident dashboard, marketplace, tracking
-├── components/              # Reusable UI components
-│   └── ui/                  # Base UI primitives (button, card, badge, etc.)
-├── hooks/                   # Custom React hooks
-├── lib/                     # Shared utilities
-│   ├── ai.ts                # Claude AI client wrapper
-│   ├── razorpay.ts          # Razorpay client
-│   ├── supabase-client.ts   # Browser Supabase client
-│   ├── supabase-server.ts   # Server Supabase client
-│   └── utils.ts             # Utility functions (INR formatting, haversine, etc.)
+│   │   ├── auth/               # Authentication (login, logout, register, me)
+│   │   ├── bookings/           # Booking CRUD, detail, and join endpoint
+│   │   ├── community-bookings/ # Community booking queries
+│   │   ├── cron/               # Scheduled tasks (heatwave check, coordinator nudge)
+│   │   ├── driver/             # Driver-specific APIs (bookings, tankers, GPS location)
+│   │   ├── heatwave/           # Heatwave alert queries
+│   │   ├── nudges/             # Nudge log retrieval and read
+│   │   ├── owner/              # Owner fleet, bookings, assign driver, stats
+│   │   ├── payments/           # Payment creation, webhooks, cash marking
+│   │   ├── receipts/           # Receipt generation and retrieval
+│   │   ├── reviews/            # Tanker reviews
+│   │   ├── tankers/            # Tanker CRUD
+│   │   ├── users/              # User listing
+│   │   └── wards/              # Ward listing
+│   ├── coordinator/            # Coordinator dashboard and pages
+│   │   ├── anomaly/[id]/       # Anomaly detail
+│   │   ├── assign/[id]/        # Driver assignment
+│   │   ├── booking/[id]/       # Booking detail
+│   │   ├── create/             # Create community booking
+│   │   ├── delivery/[id]/      # Delivery tracking
+│   │   ├── history/            # Booking history
+│   │   └── nudges/             # Nudge management
+│   ├── driver/                 # Driver dashboard and delivery flow
+│   │   ├── confirm/[id]/       # Confirm delivery with CV
+│   │   ├── delivery/[id]/      # Delivery progress
+│   │   └── history/            # Delivery history
+│   ├── owner/                  # Owner dashboard, fleet, demand
+│   │   ├── bookings/           # Booking management
+│   │   ├── demand/             # Demand forecast
+│   │   ├── fleet/              # Fleet management
+│   │   └── reviews/            # Tanker reviews
+│   └── resident/               # Resident dashboard, marketplace, tracking
+│       ├── booking/[id]/       # Booking detail
+│       ├── community/          # Community bookings
+│       ├── delivery/[id]/      # Delivery tracking
+│       ├── marketplace/        # Tanker marketplace
+│       ├── payment/[id]/       # Payment flow
+│       └── tracking/[id]/      # Live GPS tracking
+├── components/                 # Reusable UI components
+│   ├── BillSplit.tsx           # Community bill splitting
+│   ├── BookingStatus.tsx       # Booking status tracker
+│   ├── BottomNav.tsx           # Mobile bottom navigation
+│   ├── CVScanner.tsx           # Camera-based volume verification
+│   ├── HeatwaveAlert.tsx       # Heatwave alert banner
+│   ├── LoadingBar.tsx          # Top loading progress bar
+│   ├── MapView.tsx             # Leaflet map with routes and markers
+│   ├── ReceiptCard.tsx         # Receipt display
+│   ├── TankerCard.tsx          # Tanker info card
+│   ├── ThemeToggle.tsx         # Dark/light theme toggle
+│   └── ui/                     # shadcn/ui primitives
+├── contexts/
+│   └── ThemeContext.tsx         # Theme provider context
+├── hooks/
+│   ├── useBooking.ts           # Booking state hook
+│   ├── useHeatwave.ts          # Heatwave alert hook
+│   └── useLocation.ts          # GPS location hook
+├── lib/
+│   ├── gemini.ts               # Groq (text) + Gemini (vision) AI wrapper
+│   ├── geocode.ts              # Nominatim geocoding utility
+│   ├── razorpay.ts             # Razorpay client
+│   ├── supabase-client.ts      # Browser Supabase client
+│   ├── supabase-server.ts      # Server + service role Supabase clients
+│   └── utils.ts                # Utility functions (INR formatting, haversine, etc.)
 ├── scripts/
-│   └── seed.sql             # Demo seed data
+│   ├── seed-data.ts            # Main seed script (wards, users, bookings, reviews)
+│   └── seed-jaipur.js          # Extended Jaipur seed data
+├── supabase/
+│   └── migrations/             # SQL migrations
 ├── types/
-│   └── index.ts             # TypeScript type definitions
-└── middleware.ts            # Next.js middleware
+│   └── index.ts                # TypeScript type definitions
+├── middleware.ts                # Next.js middleware (auth + routing)
+└── vercel.json                 # Vercel deployment config
 ```
 
 ---
@@ -208,25 +262,41 @@ jalsetu/
 ### Authentication
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/auth/register` | Register new user |
+| POST | `/api/auth/register` | Register new user (ward required for resident/coordinator) |
 | POST | `/api/auth/login` | Sign in |
 | POST | `/api/auth/logout` | Sign out |
-| GET | `/api/auth/me` | Get current user profile |
+| GET | `/api/auth/me` | Get current user profile with ward |
 
 ### Bookings
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/bookings` | List bookings (filterable by ward, status, type, resident) |
-| POST | `/api/bookings` | Create a new booking |
-| GET | `/api/bookings/[id]` | Get booking details |
-| PATCH | `/api/bookings/[id]` | Update booking status |
+| POST | `/api/bookings` | Create a new booking (auto-geocodes address) |
+| GET | `/api/bookings/[id]` | Get booking details with tanker, driver, participants |
+| PATCH | `/api/bookings/[id]` | Update booking status, assign driver |
 | POST | `/api/bookings/[id]/join` | Join a community booking |
+
+### Driver
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/driver/bookings` | Get bookings for a driver |
+| GET | `/api/driver/tankers` | Get tankers for a driver |
+| POST | `/api/driver/location` | Submit GPS location |
+| GET | `/api/driver/location/[driverId]` | Get driver GPS location and history |
+
+### Owner
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/owner/bookings` | Owner's bookings |
+| PATCH | `/api/owner/bookings/[id]/assign` | Assign driver to booking |
+| GET | `/api/owner/fleet` | Owner's fleet overview |
+| GET | `/api/owner/stats` | Owner's earnings stats |
 
 ### Tankers
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/tankers` | List available tankers (with distance calc) |
-| POST | `/api/tankers` | Add a new tanker (owner only) |
+| GET | `/api/tankers` | List tankers |
+| POST | `/api/tankers` | Add a new tanker |
 | GET | `/api/tankers/[id]` | Get tanker details |
 
 ### Payments
@@ -236,15 +306,11 @@ jalsetu/
 | POST | `/api/payments/webhook` | Razorpay webhook handler |
 | POST | `/api/payments/[id]/cash` | Mark cash payment |
 
-### Receipts
+### Receipts & Reviews
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/receipts` | List receipts |
 | GET | `/api/receipts/[id]` | Get receipt details |
-
-### Reviews
-| Method | Endpoint | Description |
-|--------|----------|-------------|
 | POST | `/api/reviews` | Submit a tanker review |
 | GET | `/api/reviews/tanker/[id]` | Get reviews for a tanker |
 
@@ -265,24 +331,20 @@ jalsetu/
 | GET | `/api/heatwave` | Get active heatwave alerts |
 | GET | `/api/nudges` | Get user's unread nudges |
 | PATCH | `/api/nudges/[id]/read` | Mark nudge as read |
-| GET | `/api/owner/fleet` | Owner's fleet overview |
-| GET | `/api/owner/stats` | Owner's earnings stats |
+| GET | `/api/users` | List users (filterable by role) |
+| GET | `/api/community-bookings` | List community bookings |
 | GET | `/api/cron/heatwave-check` | Scheduled heatwave monitoring |
 | GET | `/api/cron/coordinator-nudge` | Scheduled nudge dispatch |
 
 ---
 
-## Screenshots
+## Design
 
-> _Screenshots will be added here after deployment._
-
-**Resident Dashboard** — Book water, track orders, receive heatwave alerts and personalized nudges.
-
-**Coordinator View** — Manage community bookings, dispatch tankers, monitor participation progress.
-
-**Owner Fleet** — View tanker fleet status, demand forecasts, and earnings analytics.
-
-**AI Anomaly Detection** — Real-time price gouging and volume discrepancy analysis powered by Claude.
+- Dark navy (#021B3A) background
+- Teal (#0D9488) primary accent
+- Rounded-2xl card pattern
+- Mobile-first responsive layout
+- No emojis, no Hindi in UI text
 
 ---
 
