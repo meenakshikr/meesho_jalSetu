@@ -164,6 +164,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `resident3@test.com` | Resident | Civil Lines Ward 3 |
 
 ---
+## HLD Diagram and Architecture
 
 ## Project Structure
 
