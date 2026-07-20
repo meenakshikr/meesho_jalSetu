@@ -183,6 +183,25 @@ async function main() {
     await supaUpdate('tankers', fields, `id=eq.${id}`)
     console.log(`  ${t.operator_name} (${t.capacity_liters}L, driver: ${t.driver_id.slice(0,8)})`)
   }
+
+  console.log('Inserting City Water Co tanker...')
+  const { error: cityErr } = await supabase.from('tankers').upsert({
+    id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    owner_id: OWNER_ID,
+    driver_id: DRIVER1_ID,
+    operator_name: 'City Water Co',
+    vehicle_number: 'RJ14-WT-009',
+    capacity_liters: 5000,
+    price_per_liter: 2.50,
+    is_certified: false,
+    current_lat: 26.890,
+    current_lng: 75.810,
+    rating: 2.1,
+    total_deliveries: 12,
+    is_available: true,
+  })
+  if (cityErr) console.log('  City Water Co insert error:', cityErr.message)
+  else console.log('  City Water Co (5000L, Rs2.50/L — designed to trigger anomaly)')
   console.log(`  Total tankers: 4\n`)
 
   const allTankers = [T1, T2, T3, T4]
