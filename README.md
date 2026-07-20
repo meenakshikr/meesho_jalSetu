@@ -364,9 +364,9 @@ Open [http://localhost:3000](http://localhost:3000).
 | `owner@test.com` | Owner | - | Fleet dashboard, demand forecast heatmap |
 | `owner2@test.com` | Owner | - | Second owner perspective |
 
-### Demo Script for Judges
+### User Guide
 
-Follow this sequence to show all AI features working live:
+Follow this sequence to see features working live:
 
 **Step 1 — Login as `resident@test.com`**
 
