@@ -353,16 +353,44 @@ Open [http://localhost:3000](http://localhost:3000).
 
 | Account | Role | Ward | What to Test |
 |---------|------|------|-------------|
-| `owner@test.com` | Owner | - | Fleet management, demand forecast, driver assignment |
-| `owner2@test.com` | Owner | - | Second owner fleet (Brij Water Works, Yamuna Tankers) |
-| `driver@test.com` | Driver | - | Active delivery to Vaishali Nagar, CV scan flow |
-| `driver2@test.com` | Driver | - | Active delivery to Mansarovar, dispatched status |
+| `resident1@test.com` | Resident | Vaishali Nagar Ward 8 | Heatwave banner, nudge card, marketplace with AI ranking, book City Water Co to trigger anomaly |
+| `resident2@test.com` | Resident | Mansarovar Ward 12 | Community booking join flow |
+| `resident3@test.com` | Resident | Civil Lines Ward 3 | Different ward perspective |
+| `coordinator@test.com` | Coordinator | Mansarovar Ward 12 | Create community booking, see residents join in real time |
+| `driver@test.com` | Driver | - | Active delivery, CV tank scan, confirm delivery |
+| `driver2@test.com` | Driver | - | Additional deliveries |
 | `driver3@test.com` | Driver | - | Active delivery to Civil Lines, dispatched status |
 | `driver4@test.com` | Driver | - | Active delivery to Jagatpura, confirmed status |
-| `coordinator@test.com` | Coordinator | Mansarovar Ward 12 | Community bookings, anomaly monitoring |
-| `resident1@test.com` | Resident | Vaishali Nagar Ward 8 | Book water, track delivery, CV verification |
-| `resident2@test.com` | Resident | Mansarovar Ward 12 | Community bookings, heatwave alerts |
-| `resident3@test.com` | Resident | Civil Lines Ward 3 | Marketplace browsing, tanker reviews |
+| `owner@test.com` | Owner | - | Fleet dashboard, demand forecast heatmap |
+| `owner2@test.com` | Owner | - | Second owner perspective |
+
+### Demo Script for Judges
+
+Follow this sequence to show all AI features working live:
+
+**Step 1 — Login as `resident@test.com`**
+
+The home screen immediately shows the heatwave alert banner (seeded as active) and the predictive nudge card saying water is running low. Both are AI-generated. No human set these up.
+
+**Step 2 — Tap Book Water > Tanker Marketplace**
+
+Three tankers load sorted by AI rank score. Each card shows a teal callout with the AI's one-line reason for the ranking. City Water Co appears at the bottom ranked lowest because it is 177% above the district average price.
+
+**Step 3 — Select City Water Co and confirm booking**
+
+Within 3-5 seconds, a red "Price Alert Detected" banner appears on the booking screen. The anomaly agent fired automatically in the background after the booking was created.
+
+**Step 4 — Login as `coordinator@test.com`**
+
+Create a community booking. Open a second browser tab logged in as `resident2@test.com` and join the booking. Watch the participant count update in real time on the coordinator screen without refreshing.
+
+**Step 5 — Login as `driver@test.com`**
+
+Open an active delivery. Tap Scan Tank. Take a before photo of any circular opening. Deliver. Take an after photo. Tap Verify Volume. The CV result appears showing before and after fill percentages and estimated liters delivered.
+
+**Step 6 — Login as `owner@test.com`**
+
+Go to Demand Forecast. The AI has analyzed all ward booking patterns and heatwave data and predicted which wards will have highest demand tomorrow. Wards are ranked with color-coded bars.
 
 ---
 
