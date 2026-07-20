@@ -35,6 +35,14 @@ export default function PaymentPage() {
       const data: Booking = await res.json()
       setBooking(data)
 
+      if (data.anomaly_flagged) {
+        setAnomalyResult({
+          is_anomaly: true,
+          reason: data.anomaly_reason || 'Price significantly above district average',
+          percent_above: 0,
+        })
+      }
+
       fetch('/api/ai/anomaly-check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

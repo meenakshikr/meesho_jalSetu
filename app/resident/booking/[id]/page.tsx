@@ -119,13 +119,17 @@ export default function BookingPage() {
       if (!res.ok) throw new Error('Failed to create booking')
       const data = await res.json()
 
-      fetch('/api/ai/anomaly-check', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ booking_id: data.id }),
-      }).then(r => r.json()).then(result => {
-        if (result.is_anomaly) setAnomalyResult(result)
-      }).catch(() => {})
+      try {
+        const anomalyRes = await fetch('/api/ai/anomaly-check', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ booking_id: data.id }),
+        })
+        if (anomalyRes.ok) {
+          const result = await anomalyRes.json()
+          if (result.is_anomaly) setAnomalyResult(result)
+        }
+      } catch {}
 
       router.push(`/resident/payment/${data.id}`)
     } catch (err) {
