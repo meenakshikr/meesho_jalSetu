@@ -392,16 +392,17 @@ Follow this sequence to see every feature working live. Each step shows a differ
 
 ---
 
+
 #### Step 3 — Booking + Anomaly Detection (AI)
 
 **Select City Water Co and tap "Confirm Booking"**
 
 - Enter a delivery address, select volume (e.g., 5000L), and confirm.
 - The booking is created and the system **automatically** runs the anomaly detection agent in the background.
-- Within 3-5 seconds, a **red "Price Alert Detected" banner** appears on the booking details screen.
+- On the payment screen, within 3-5 seconds, a **red "Price Alert Detected" banner** appears.
 - The AI compared the booking price (Rs 2.50/L) against the district average (Rs 0.90/L) and determined it is price gouging — not normal seasonal variation.
 - The booking is flagged with `anomaly_flagged: true` in the database. This creates a permanent audit record.
-- Tap the banner to see the full anomaly details: district average, charged price, percentage above average, and the AI's reasoning.
+- The banner shows: the AI's reasoning and percentage above district average.
 
 ---
 
@@ -518,39 +519,17 @@ Follow this sequence to see every feature working live. Each step shows a differ
 
 ---
 
+
 #### Step 11 — Coordinator Anomaly Monitoring
 
 **Login as `coordinator@test.com`**
 
-- The coordinator dashboard shows any **anomaly alerts** for their ward.
-- If a booking was flagged by the anomaly agent (from Step 3), a red warning badge appears.
-- The coordinator can tap into the anomaly to see: booking details, price charged, district average, percentage above average, and the AI's reasoning.
-- The coordinator can escalate or resolve the anomaly from this screen.
+- The coordinator dashboard shows their ward (Mansarovar Ward 12) and recent bookings.
+- In the booking history, any bookings flagged by the anomaly agent appear with a **red warning badge** and the anomaly reason.
+- The coordinator can tap into a flagged booking to see full details: price charged, district average, percentage above, and the AI's reasoning.
+- The coordinator can resolve or escalate the anomaly from this screen.
 
 ---
-
-
-#### Step 13 — Tanker Reviews
-
-**Login as `resident1@test.com` or `resident3@test.com`**
-
-- After a delivery is completed, the resident can leave a **star rating and comment** for the tanker.
-- Reviews are visible on the tanker detail page in the marketplace.
-- Reviews feed back into the AI ranking agent — tankers with higher ratings rank better.
-
----
-
-#### Step 14 — Delivery History
-
-**Login as any driver, resident, or coordinator**
-
-- Each role has a **History** page showing all past deliveries.
-- Drivers see: delivery address, volume, status, date, and payment status.
-- Residents see: tanker name, volume received, amount paid, receipt status, and whether CV verified.
-- Coordinators see: all bookings in their ward with participant counts and delivery status.
-
----
-
 
 ### AI Features Summary
 

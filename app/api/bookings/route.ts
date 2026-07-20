@@ -128,6 +128,17 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/ai/anomaly-check`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        booking_id: booking.id,
+        tanker_id,
+        ward_id: ward_id || profile.ward_id,
+        price_per_liter,
+      }),
+    }).catch(() => {})
+
     return NextResponse.json(booking, { status: 201 })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

@@ -7,7 +7,7 @@ import { LoadingSkeleton, ErrorState } from '@/components/ui/LoadingSkeleton'
 import { formatINR } from '@/lib/utils'
 import { loadRazorpayScript, RazorpayWindow, RazorpayResponse } from '@/lib/razorpay'
 import { motion } from 'framer-motion'
-import { ArrowLeft, CreditCard, Banknote, Star, CheckCircle } from 'lucide-react'
+import { ArrowLeft, CreditCard, Banknote, Star, CheckCircle, AlertTriangle } from 'lucide-react'
 
 const PAYMENT_METHODS = [
   { key: 'upi' as const, label: 'UPI Payment', icon: CreditCard, desc: 'Pay via Google Pay, PhonePe, etc.' },
@@ -24,6 +24,7 @@ export default function PaymentPage() {
   const [error, setError] = useState<string | null>(null)
   const [method, setMethod] = useState<PaymentMethod | null>(null)
   const [processing, setProcessing] = useState(false)
+  const [anomalyResult, setAnomalyResult] = useState<{ is_anomaly: boolean; reason: string; percent_above: number } | null>(null)
 
   const fetchBooking = async () => {
     try {
@@ -33,6 +34,14 @@ export default function PaymentPage() {
       if (!res.ok) throw new Error('Failed to load booking')
       const data: Booking = await res.json()
       setBooking(data)
+
+      fetch('/api/ai/anomaly-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ booking_id: id }),
+      }).then(r => r.json()).then(result => {
+        if (result.is_anomaly) setAnomalyResult(result)
+      }).catch(() => {})
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
@@ -165,6 +174,17 @@ export default function PaymentPage() {
             <span className="text-lg font-bold text-teal-400">{formatINR(booking!.total_amount)}</span>
           </div>
         </div>
+
+        {anomalyResult && anomalyResult.is_anomaly && (
+          <div className="bg-red-950 border border-red-900 rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="w-5 h-5 text-red-400" />
+              <span className="text-sm font-semibold text-red-400">Price Alert Detected</span>
+            </div>
+            <p className="text-xs text-red-300">{anomalyResult.reason}</p>
+            <p className="text-xs text-red-400 mt-1">{anomalyResult.percent_above.toFixed(0)}% above district average</p>
+          </div>
+        )}
 
         <div className="space-y-3">
           {PAYMENT_METHODS.map((m) => {
