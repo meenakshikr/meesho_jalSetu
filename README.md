@@ -99,7 +99,6 @@ Resident / Coordinator          Owner               Driver
 - **Community Booking Management**: Create and manage group bookings for your ward
 - **Resident Management**: See all residents in your ward, invite them to group orders
 - **Dispatch Tankers**: Assign and dispatch tankers for community orders
-- **Anomaly Monitoring**: Get instant alerts when price gouging or short deliveries are detected
 - **Heatwave Response**: View AI-generated advisories for your ward during heatwaves
 - **History**: Full booking and delivery history with status tracking
 
@@ -116,7 +115,6 @@ Resident / Coordinator          Owner               Driver
 - **Earnings**: Track revenue, completed deliveries, and average earnings per tanker
 - **Demand Forecast**: AI predicts water demand for each ward over the next 7 days — helps you position tankers strategically
 - **Reviews**: Monitor driver and tanker ratings from residents
-- **Anomaly Alerts**: Get notified of any disputes or flagged deliveries
 
 ---
 
@@ -126,7 +124,7 @@ JalSetu uses two AI backends working together:
 
 | AI Backend | Model | Used For |
 |------------|-------|----------|
-| **Groq** | llama-3.3-70b-versatile | Text tasks: demand forecasting, anomaly detection, tanker ranking, nudge generation, heatwave advisories |
+| **Groq** | llama-3.3-70b-versatile | Text tasks: demand forecasting, tanker ranking, nudge generation, heatwave advisories |
 | **Google Gemini** | gemini-3.1-flash-lite | Vision tasks: analyzing tanker photos to estimate water fill levels |
 
 AI wrapper lives in `lib/gemini.ts` — unified interface with retry and exponential backoff for both Groq and Gemini APIs.
@@ -182,28 +180,7 @@ Ranks available tankers for a specific ward based on multiple factors, so reside
 
 ---
 
-### Agent 3: Price Gouging Anomaly Detection (Groq)
-
-**Endpoint:** `POST /api/ai/anomaly-check`
-**Role:** Coordinator, Owner (monitoring)
-**Model:** Groq llama-3.3-70b-versatile
-
-Detects when a tanker is charging significantly more than the district average and protects residents from price gouging during peak demand.
-
-**Flow:**
-1. Triggered when a booking is created or reviewed
-2. System calculates how far the booking price is above the ward average
-3. If >20% above average, sends price data to Groq
-4. AI evaluates whether the premium is justified (summer premiums of 20-30% are considered legitimate)
-5. Only flags prices >40% above average as anomalies
-6. If flagged: logs the anomaly, updates booking with `anomaly_flagged: true`, notifies coordinator
-
-**Input:** `{ booking_id, tanker_id, ward_id, price_per_liter }`
-**Output:** `{ is_anomaly, percent_above, reason (max 12 words), severity: "low"|"medium"|"high" }`
-
----
-
-### Agent 4: Ward Demand Forecasting (Groq)
+### Agent 3: Ward Demand Forecasting (Groq)
 
 **Endpoint:** `POST /api/ai/demand-forecast`
 **Role:** Owner (fleet planning)
@@ -224,7 +201,7 @@ Predicts water demand for each ward over the next 7 days so tanker owners can po
 
 ---
 
-### Agent 5: Heatwave Advisory Generator (Groq)
+### Agent 4: Heatwave Advisory Generator (Groq)
 
 **Endpoint:** `POST /api/ai/heatwave-advisory`
 **Role:** All users (safety information)
@@ -244,7 +221,7 @@ Generates plain-language heatwave safety advisories tailored to the current weat
 
 ---
 
-### Agent 6: Predictive Re-engagement Nudges (Groq)
+### Agent 5: Predictive Re-engagement Nudges (Groq)
 
 **Endpoint:** `POST /api/ai/predictive-nudge`
 **Role:** Resident engagement (retention)
@@ -353,7 +330,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 | Account | Role | Ward | What to Test |
 |---------|------|------|-------------|
-| `resident1@test.com` | Resident | Vaishali Nagar Ward 8 | Heatwave banner, nudge card, marketplace with AI ranking, book City Water Co to trigger anomaly |
+| `resident1@test.com` | Resident | Vaishali Nagar Ward 8 | Heatwave banner, nudge card, marketplace with AI ranking, book water |
 | `resident2@test.com` | Resident | Mansarovar Ward 12 | Community booking join flow |
 | `resident3@test.com` | Resident | Civil Lines Ward 3 | Different ward perspective |
 | `coordinator@test.com` | Coordinator | Mansarovar Ward 12 | Create community booking, see residents join in real time |
@@ -387,26 +364,11 @@ Follow this sequence to see every feature working live. Each step shows a differ
 
 - The marketplace loads **three tankers** sorted by AI rank score (0-100).
 - Each tanker card shows: operator name, capacity (liters), price per liter, star rating, and a **teal callout** with the AI's one-line reason for the ranking (e.g., "Best value — 15% below district average").
-- **City Water Co** appears at the bottom ranked lowest. The AI flagged it because it charges 177% above the district average price. The ranking reason is visible on the card.
 - The ranking is calculated by comparing price vs. district average, rating, delivery count, distance, and certification status — all sent to Groq AI in real time.
 
 ---
 
-
-#### Step 3 — Booking + Anomaly Detection (AI)
-
-**Select City Water Co and tap "Confirm Booking"**
-
-- Enter a delivery address, select volume (e.g., 5000L), and confirm.
-- The booking is created and the system **automatically** runs the anomaly detection agent in the background.
-- On the payment screen, within 3-5 seconds, a **red "Price Alert Detected" banner** appears.
-- The AI compared the booking price (Rs 2.50/L) against the district average (Rs 0.90/L) and determined it is price gouging — not normal seasonal variation.
-- The booking is flagged with `anomaly_flagged: true` in the database. This creates a permanent audit record.
-- The banner shows: the AI's reasoning and percentage above district average.
-
----
-
-#### Step 4 — GPS Tracking
+#### Step 3 — GPS Tracking
 
 **On the same booking, tap "Track Delivery"**
 
@@ -418,7 +380,7 @@ Follow this sequence to see every feature working live. Each step shows a differ
 
 ---
 
-#### Step 5 — Community Booking + Realtime (Coordinator + Resident)
+#### Step 4 — Community Booking + Realtime (Coordinator + Resident)
 
 **Open a new browser tab. Login as `coordinator@test.com`**
 
@@ -440,7 +402,7 @@ Follow this sequence to see every feature working live. Each step shows a differ
 
 ---
 
-#### Step 6 — Driver Delivery + GPS Tracking
+#### Step 5 — Driver Delivery + GPS Tracking
 
 **Login as `driver@test.com`**
 
@@ -454,7 +416,7 @@ Follow this sequence to see every feature working live. Each step shows a differ
 
 ---
 
-#### Step 7 — CV Volume Verification (AI Vision)
+#### Step 6 — CV Volume Verification (AI Vision)
 
 **On the driver delivery page, tap "Scan Tank"**
 
@@ -483,7 +445,7 @@ Follow this sequence to see every feature working live. Each step shows a differ
 
 ---
 
-#### Step 8 — Delivery Confirmation + Receipt
+#### Step 7 — Delivery Confirmation + Receipt
 
 **On the confirm page (after CV scan shows "confirmed")**
 
@@ -496,7 +458,7 @@ Follow this sequence to see every feature working live. Each step shows a differ
 
 ---
 
-#### Step 9 — Owner Fleet Dashboard
+#### Step 8 — Owner Fleet Dashboard
 
 **Login as `owner@test.com`**
 
@@ -507,7 +469,7 @@ Follow this sequence to see every feature working live. Each step shows a differ
 
 ---
 
-#### Step 10 — AI Demand Forecast
+#### Step 9 — AI Demand Forecast
 
 **On the owner dashboard, tap "Demand Forecast"**
 
@@ -519,18 +481,6 @@ Follow this sequence to see every feature working live. Each step shows a differ
 
 ---
 
-
-#### Step 11 — Coordinator Anomaly Monitoring
-
-**Login as `coordinator@test.com`**
-
-- The coordinator dashboard shows their ward (Mansarovar Ward 12) and recent bookings.
-- In the booking history, any bookings flagged by the anomaly agent appear with a **red warning badge** and the anomaly reason.
-- The coordinator can tap into a flagged booking to see full details: price charged, district average, percentage above, and the AI's reasoning.
-- The coordinator can resolve or escalate the anomaly from this screen.
-
----
-
 ### AI Features Summary
 
 | Step | AI Agent | Model | Trigger |
@@ -538,9 +488,8 @@ Follow this sequence to see every feature working live. Each step shows a differ
 | 1 | Heatwave Advisory | Groq llama-3.3-70b | Cron job (every 6 hours) |
 | 1 | Predictive Nudge | Groq llama-3.3-70b | Cron job (daily 6am) |
 | 2 | Tanker Ranking | Groq llama-3.3-70b | Marketplace page load |
-| 3 | Anomaly Detection | Groq llama-3.3-70b | Booking creation |
-| 7 | CV Volume Verification | Gemini 3.1-flash-lite | Driver takes photos |
-| 10 | Demand Forecast | Groq llama-3.3-70b | Owner opens dashboard |
+| 6 | CV Volume Verification | Gemini 3.1-flash-lite | Driver takes photos |
+| 9 | Demand Forecast | Groq llama-3.3-70b | Owner opens dashboard |
 
 ---
 
@@ -570,8 +519,7 @@ jalsetu/
 │   │   ├── login/
 │   │   └── register/
 │   ├── api/
-│   │   ├── ai/                 # AI-powered endpoints (6 total)
-│   │   │   ├── anomaly-check/  # Price gouging detection
+│   │   ├── ai/                 # AI-powered endpoints (5 total)
 │   │   │   ├── cv-volume/      # Camera volume verification
 │   │   │   ├── demand-forecast/# Ward-level demand prediction
 │   │   │   ├── heatwave-advisory/ # Safety advisories
@@ -592,7 +540,6 @@ jalsetu/
 │   │   ├── users/              # User listing
 │   │   └── wards/              # Ward listing
 │   ├── coordinator/            # Coordinator pages
-│   │   ├── anomaly/[id]/       # Anomaly detail
 │   │   ├── assign/[id]/        # Driver assignment
 │   │   ├── booking/[id]/       # Booking detail
 │   │   ├── create/             # Create community booking
@@ -670,7 +617,7 @@ jalsetu/
 | GET | `/api/bookings` | List bookings (filterable by ward, status, type, resident) |
 | POST | `/api/bookings` | Create a new booking (auto-geocodes address) |
 | GET | `/api/bookings/[id]` | Get booking details with tanker, driver, participants |
-| PATCH | `/api/bookings/[id]` | Update booking status, assign driver. Auto-generates receipts on delivery. Auto-raises disputes and notifies coordinator + resident on short delivery. |
+| PATCH | `/api/bookings/[id]` | Update booking status, assign driver. Auto-generates receipts on delivery. |
 | POST | `/api/bookings/[id]/join` | Join a community booking |
 
 ### Driver
@@ -715,7 +662,6 @@ jalsetu/
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/ai/rank-tankers` | AI-ranked tanker recommendations for a ward |
-| POST | `/api/ai/anomaly-check` | Price/volume anomaly detection |
 | POST | `/api/ai/cv-volume` | Computer vision volume verification from photos |
 | POST | `/api/ai/heatwave-advisory` | Heatwave advisory generation |
 | POST | `/api/ai/demand-forecast` | Ward-level 7-day demand prediction |
